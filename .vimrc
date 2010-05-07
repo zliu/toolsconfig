@@ -13,6 +13,8 @@ set smartindent
 set cindent
 set incsearch
 set foldenable
+"set cursorline "display underline on current line
+"set invlist "display invisible space charactors
 "let &t_ti = "\<Esc>[?47h"
 "let &t_te = "\<Esc>[?47l"
 let &termencoding=&encoding
@@ -69,6 +71,10 @@ if getline('.')[col('.') - 1] == a:char
         return a:char
 endif
 endf
+"************************************
+" NERDcomment setting
+"************************************
+let NERDSpaceDelims=1 "insert a space between '/*' and '*/'
 "************************************
 " Taglist shortcuts
 "************************************
