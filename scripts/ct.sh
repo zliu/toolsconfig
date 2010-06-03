@@ -1,2 +1,2 @@
 #!/bin/sh
-ctags -R `pwd`
+ctags --sort=foldcase -R $PWD

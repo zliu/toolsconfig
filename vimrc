@@ -13,6 +13,7 @@ set autoread
 
 set nocp
 syntax on
+"set t_Co=256
 
 """"""""""""""""""""""""""""""""""""""""
 "设置缩进
@@ -31,6 +32,26 @@ set report=0
 set formatoptions=tcrqn
 set incsearch
 set foldenable
+set foldmethod=indent
+nnoremap <silent> <space> @=((foldclosed(line('.')) < 0) ? 'zc':'zo')<CR>
+"Split
+map <silent> <C-v> :vsp<CR>
+map <silent> <C-s> :sp<CR>
+nmap <C-h> <C-w>h
+nmap <C-j> <C-w>j
+nmap <C-k> <C-w>k
+nmap <C-l> <C-w>l
+nmap <silent> [ :vertical res -5<CR>
+nmap <silent> ] :vertical res +5<CR>
+"nmap <silent> [ <c-w><
+"nmap <silent> ] <c-w>>
+nmap <silent> - :res -1<CR>
+nmap <silent> = :res +1<CR>
+nmap <leader>hm <C-w>_
+nmap <leader>vm <C-w>\|
+nmap <leader>q <C-w>=
+
+
 " Display underline on current line
 "set cursorline 
 " Display invisible space charactors
@@ -55,15 +76,12 @@ if &term != "xterm"
     let &t_te = "\<Esc>[?47l"
 endif
 
-set foldmethod=manual
-nnoremap <space> @=((foldclosed(line('.')) < 0) ? 'zc':'zo')<CR>
-map <silent> <C-v> :vsp<CR>
 
 """"""""""""""""""""""""""""""""""""""""
 "  switch wrap mode
 let g:wrapmode=1
 nmap <silent> <F4> :call ToggleWrapMode()<CR>
-function ToggleWrapMode()
+function! ToggleWrapMode()
 if g:wrapmode == 0
     set wrap
     let g:wrapmode=1
@@ -85,11 +103,13 @@ let g:mapleader = ","
 nmap <leader>w :w!<cr>
 
 " Fast loading .vimrc file
-nmap <leader>l :vi ~/.vimrc<cr>
+nmap <leader>l :vsp ~/.vimrc<cr>
 
 " Fast loading .vimrc file
 nmap <leader>s :source ~/.vimrc<cr>
 
+" Open Expolor in current window
+nmap <leader>e :Explore<cr>
 
 """"""""""""""""""""""""""""""""""""""""
 "  key shortcuts for save
@@ -106,11 +126,11 @@ nmap <C-a> :wa<CR>
 "  Tab View
 map  <C-e> :tabprevious<CR>
 map  <C-r> :tabnext<CR>
-map  <C-t> :tabnew<CR>
+map  <C-t> :tabnew<CR>:Explore<cr>
 map  <C-y> :tabclose<CR>
 imap  <C-e> <ESC>:tabprevious<CR>i
 imap  <C-r> <ESC>:tabnext<CR>i
-imap  <C-t> <ESC>:tabnew<CR>i
+imap  <C-t> <ESC>:tabnew<CR>:Explore<cr>i
 
 """"""""""""""""""""""""""""""""""""""""
 "  Auto Pair for parentheses, square brackets and curly braces
@@ -125,7 +145,7 @@ inoremap ] <c-r>=ClosePair(']')<CR>
 " 将输入光标置到{所在行和}所在行的中间
 inoremap <CR> <c-r>=AutoNewLine('}')<CR>
 
-function ClosePair(char)
+function! ClosePair(char)
 if getline('.')[col('.') - 1] == a:char
     return "\<Right>"
     else
@@ -133,7 +153,7 @@ if getline('.')[col('.') - 1] == a:char
 endif
 endf
 
-function AutoNewLine(char)
+function! AutoNewLine(char)
 if getline('.')[col('.') - 1] == a:char
     return "\<CR>\<ESC>ko"
 else
@@ -145,7 +165,8 @@ endf
 
 """"""""""""""""""""""""""""""""""""""""
 " NERDcomment setting
-let NERDSpaceDelims=1 "insert a space between '/*' and '*/'
+" let NERDSpaceDelims=1 "insert a space between '/*' and '*/'
+imap <C-c> <SPACE><plug>NERDCommenterInInsert 
 """"""""""""""""""""""""""""""""""""""""
 " Taglist shortcuts
 map <silent> <F12> :TlistToggle<cr>
@@ -160,6 +181,9 @@ let Tlist_File_Fold_Auto_Close = 1     "自动折叠非活动文件的tag列表
 " netrw setting
 let g:netrw_winsize = 30
 nmap <silent> <F6> :Sexplore!<cr> 
+let g:netrw_altv = 1
+"let g:netrw_alto = 1
+"let g:netrw_liststyle = 3
 
 """"""""""""""""""""""""""""""""""""""""
 " FuzzyFinder setting
@@ -201,3 +225,62 @@ function! LookupFile_IgnoreCaseFunc(pattern)
     return files
 endfunction
 let g:LookupFile_LookupFunc = 'LookupFile_IgnoreCaseFunc' 
+
+""""""""""""""""""""""""""""""""""""""""
+" Trinity
+
+" Open and close all the three plugins on the same time 
+nmap <F8>   :TrinityToggleAll<CR> 
+
+" Open and close the srcexpl.vim separately 
+nmap <F9>   :TrinityToggleSourceExplorer<CR> 
+
+" Open and close the taglist.vim separately 
+nmap <F10>  :TrinityToggleTagList<CR> 
+
+" Open and close the NERD_tree.vim separately 
+nmap <F11>  :TrinityToggleNERDTree<CR> 
+
+""""""""""""""""""""""""""""""""""""""""
+" Source Explorer
+
+" The switch of the Source Explorer 
+"nmap <F8> :SrcExplToggle<CR>
+
+" Set the height of Source Explorer window 
+let g:SrcExpl_winHeight = 8 
+
+" Set 100 ms for refreshing the Source Explorer 
+let g:SrcExpl_refreshTime = 100 
+
+" Set "Enter" key to jump into the exact definition context 
+let g:SrcExpl_jumpKey = "<ENTER>" 
+
+" Set "Space" key for back from the definition context 
+let g:SrcExpl_gobackKey = "<SPACE>" 
+
+" In order to Avoid conflicts, the Source Explorer should know what plugins 
+" are using buffers. And you need add their bufname into the list below 
+" according to the command ":buffers!" 
+let g:SrcExpl_pluginList = [ 
+        \ "__Tag_List__", 
+        \ "[fuf]", 
+        \ "_NERD_tree_", 
+        \ "Source_Explorer" 
+    \ ]
+
+" Enable/Disable the local definition searching, and note that this is not 
+" guaranteed to work, the Source Explorer doesn't check the syntax for now. 
+" It only searches for a match with the keyword according to command 'gd' 
+let g:SrcExpl_searchLocalDef = 1 
+
+" Let the Source Explorer update the tags file when opening 
+let g:SrcExpl_isUpdateTags = 1 
+
+" Use program 'ctags' with argument '--sort=foldcase -R' to create or 
+" update a tags file 
+"let g:SrcExpl_updateTagsCmd = "ctags --sort=foldcase -R $PWD" 
+
+" Set "<F7>" key for updating the tags file artificially 
+"let g:SrcExpl_updateTagsKey = "<F7>" 
+    let g:NERDTreeWinPos = "left"
