@@ -1,2 +1,2 @@
 #!/bin/sh
-ctags --sort=foldcase -R $PWD
+ctags -R --sort=foldcase  --c-kinds=+p --fields=+S $PWD

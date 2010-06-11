@@ -46,7 +46,7 @@ nmap <silent> ] :vertical res +5<CR>
 "nmap <silent> [ <c-w><
 "nmap <silent> ] <c-w>>
 nmap <silent> - :res -1<CR>
-nmap <silent> = :res +1<CR>
+nmap <silent> _ :res +1<CR>
 nmap <leader>hm <C-w>_
 nmap <leader>vm <C-w>\|
 nmap <leader>q <C-w>=
@@ -167,6 +167,7 @@ endf
 " NERDcomment setting
 " let NERDSpaceDelims=1 "insert a space between '/*' and '*/'
 imap <C-c> <SPACE><plug>NERDCommenterInInsert 
+let NERD_cpp_alt_style=1
 """"""""""""""""""""""""""""""""""""""""
 " Taglist shortcuts
 map <silent> <F12> :TlistToggle<cr>
