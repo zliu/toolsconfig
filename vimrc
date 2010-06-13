@@ -82,13 +82,13 @@ endif
 let g:wrapmode=1
 nmap <silent> <F4> :call ToggleWrapMode()<CR>
 function! ToggleWrapMode()
-if g:wrapmode == 0
-    set wrap
-    let g:wrapmode=1
-else
-    set nowrap
-    let g:wrapmode=0
-endif
+    if g:wrapmode == 0
+        set wrap
+        let g:wrapmode=1
+    else
+        set nowrap
+        let g:wrapmode=0
+    endif
 endfunction
 
 
@@ -146,19 +146,19 @@ inoremap ] <c-r>=ClosePair(']')<CR>
 inoremap <CR> <c-r>=AutoNewLine('}')<CR>
 
 function! ClosePair(char)
-if getline('.')[col('.') - 1] == a:char
-    return "\<Right>"
+    if getline('.')[col('.') - 1] == a:char
+        return "\<Right>"
     else
         return a:char
-endif
+    endif
 endf
 
 function! AutoNewLine(char)
-if getline('.')[col('.') - 1] == a:char
-    return "\<CR>\<ESC>ko"
-else
-    return "\<CR>"
-endif
+    if getline('.')[col('.') - 1] == a:char
+        return "\<CR>\<ESC>ko"
+    else
+        return "\<CR>"
+    endif
 endf
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Plugin settings
@@ -198,7 +198,7 @@ let g:LookupFile_PreservePatternHistory = 1     "保存查找历史
 let g:LookupFile_AlwaysAcceptFirst = 1          "回车打开第一个匹配项目
 let g:LookupFile_AllowNewFiles = 0              "不允许创建不存在的文件
 if filereadable("./filenametags")                "设置tag文件的名字
-let g:LookupFile_TagExpr = '"./filenametags"'
+    let g:LookupFile_TagExpr = '"./filenametags"'
 endif
 "映射LookupFile为,lk
 "nmap <silent> <leader>lk <Plug>LookupFile<cr>
@@ -226,6 +226,51 @@ function! LookupFile_IgnoreCaseFunc(pattern)
     return files
 endfunction
 let g:LookupFile_LookupFunc = 'LookupFile_IgnoreCaseFunc' 
+
+"Automatically remove trailing spaces when saving a file.
+autocmd BufRead,BufWrite * if ! &bin | silent! %s/\s\+$//ge | endif
+
+"Remove indenting on empty line
+map <F2> :w<CR>:call CleanupBuffer(1)<CR>:noh<CR>
+function! CleanupBuffer(keep)
+    " Skip binary files
+    if (&bin > 0)
+        return
+    endif
+
+    " Remove spaces and tabs from end of every line, if possible
+    silent! %s/\s\+$//ge
+
+    " Save current line number
+    let lnum = line(".")
+
+    " number of last line
+    let lastline = line("$")
+    let n        = lastline
+
+    " while loop
+    while (1)
+        " content of last line
+        let line = getline(n)
+
+        " remove spaces and tab
+        if (!empty(line))
+            break
+        endif
+
+        let n = n - 1
+    endwhile
+
+    " Delete all empty lines at the end of file
+    let start = n+1+a:keep
+    if
+        (start < lastline)
+        execute n+1+a:keep .  "," .  lastline .  "d"
+    endif
+
+    " after clean spaces and tabs, jump back
+    exec "normal " .  lnum .  "G"
+endfunction
 
 """"""""""""""""""""""""""""""""""""""""
 " Trinity
@@ -264,11 +309,11 @@ let g:SrcExpl_gobackKey = "<SPACE>"
 " are using buffers. And you need add their bufname into the list below 
 " according to the command ":buffers!" 
 let g:SrcExpl_pluginList = [ 
-        \ "__Tag_List__", 
-        \ "[fuf]", 
-        \ "_NERD_tree_", 
-        \ "Source_Explorer" 
-    \ ]
+            \ "__Tag_List__", 
+            \ "[fuf]", 
+            \ "_NERD_tree_", 
+            \ "Source_Explorer" 
+            \ ]
 
 " Enable/Disable the local definition searching, and note that this is not 
 " guaranteed to work, the Source Explorer doesn't check the syntax for now. 
@@ -284,4 +329,4 @@ let g:SrcExpl_isUpdateTags = 1
 
 " Set "<F7>" key for updating the tags file artificially 
 "let g:SrcExpl_updateTagsKey = "<F7>" 
-    let g:NERDTreeWinPos = "left"
+let g:NERDTreeWinPos = "left"
