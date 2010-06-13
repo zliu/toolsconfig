@@ -1,0 +1,20 @@
+[user]
+	name = Zhuo Liu
+	email = lzhskywalker@gmail.com
+[merge]
+	tool = vimdiff
+[core]
+	editor = vim
+[alias]
+	co = checkout
+	br = branch
+	st = status
+	last = log -1 HEAD
+	showcfg = config --list
+	showconfig = config --list
+	ci = commit
+[color]
+	branch = auto
+	interactive = auto
+	status = auto
+	diff = auto
