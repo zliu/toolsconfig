@@ -37,10 +37,14 @@ nnoremap <silent> <space> @=((foldclosed(line('.')) < 0) ? 'zc':'zo')<CR>
 "Split
 map <silent> <C-v> :vsp<CR>
 map <silent> <C-s> :sp<CR>
-nmap <C-h> <C-w>h
-nmap <C-j> <C-w>j
-nmap <C-k> <C-w>k
-nmap <C-l> <C-w>l
+noremap <C-h> <C-w>h
+noremap <C-j> <C-w>j
+noremap <C-k> <C-w>k
+noremap <C-l> <C-w>l
+inoremap <C-h> <esc><C-w>h
+inoremap <C-j> <esc><C-w>j
+inoremap <C-k> <esc><C-w>k
+inoremap <C-l> <esc><C-w>l
 nmap <silent> [ :vertical res -5<CR>
 nmap <silent> ] :vertical res +5<CR>
 "nmap <silent> [ <c-w><
@@ -53,16 +57,16 @@ nmap <leader>q <C-w>=
 
 
 " Display underline on current line
-"set cursorline 
+"set cursorline
 " Display invisible space charactors
-"set invlist 
+"set invlist
 
 """"""""""""""""""""""""""""""""""""""""
 " 设置语言
 set encoding=utf-8
 set termencoding=utf-8
 "set fileencoding=chinese
-set fileencodings=utf-8,gbk,ucs-bom,chinese 
+set fileencodings=utf-8,gbk,ucs-bom,chinese
 let &termencoding=&encoding
 
 """"""""""""""""""""""""""""""""""""""""
@@ -166,22 +170,22 @@ endf
 """"""""""""""""""""""""""""""""""""""""
 " NERDcomment setting
 " let NERDSpaceDelims=1 "insert a space between '/*' and '*/'
-imap <C-c> <SPACE><plug>NERDCommenterInInsert 
+imap <C-c> <SPACE><plug>NERDCommenterInInsert
 let NERD_cpp_alt_style=1
 """"""""""""""""""""""""""""""""""""""""
 " Taglist shortcuts
 map <silent> <F12> :TlistToggle<cr>
 let Tlist_Show_One_File = 0            "不同时显示多个文件的tag，只显示当前文件的
 let Tlist_Exit_OnlyWindow = 1          "如果taglist窗口是最后一个窗口，则退出vim
-let Tlist_Use_Right_Window = 1         "在右侧窗口中显示taglist窗口 
-let Tlist_WinWidth = 35                "taglist窗口宽度 
+let Tlist_Use_Right_Window = 1         "在右侧窗口中显示taglist窗口
+let Tlist_WinWidth = 35                "taglist窗口宽度
 let Tlist_Auto_Update = 1              "自动更新tag列表
 let Tlist_File_Fold_Auto_Close = 1     "自动折叠非活动文件的tag列表
 
 """"""""""""""""""""""""""""""""""""""""
 " netrw setting
 let g:netrw_winsize = 30
-nmap <silent> <F6> :Sexplore!<cr> 
+nmap <silent> <F6> :Sexplore!<cr>
 let g:netrw_altv = 1
 "let g:netrw_alto = 1
 "let g:netrw_liststyle = 3
@@ -225,7 +229,7 @@ function! LookupFile_IgnoreCaseFunc(pattern)
     let files = map(tags, 'v:val["filename"]')
     return files
 endfunction
-let g:LookupFile_LookupFunc = 'LookupFile_IgnoreCaseFunc' 
+let g:LookupFile_LookupFunc = 'LookupFile_IgnoreCaseFunc'
 
 "Automatically remove trailing spaces when saving a file.
 autocmd BufRead,BufWrite * if ! &bin | silent! %s/\s\+$//ge | endif
@@ -275,58 +279,93 @@ endfunction
 """"""""""""""""""""""""""""""""""""""""
 " Trinity
 
-" Open and close all the three plugins on the same time 
-nmap <F8>   :TrinityToggleAll<CR> 
+" Open and close all the three plugins on the same time
+nmap <F8>   :TrinityToggleAll<CR>
 
-" Open and close the srcexpl.vim separately 
-nmap <F9>   :TrinityToggleSourceExplorer<CR> 
+" Open and close the srcexpl.vim separately
+nmap <F9>   :TrinityToggleSourceExplorer<CR>
 
-" Open and close the taglist.vim separately 
-nmap <F10>  :TrinityToggleTagList<CR> 
+" Open and close the taglist.vim separately
+nmap <F10>  :TrinityToggleTagList<CR>
 
-" Open and close the NERD_tree.vim separately 
-nmap <F11>  :TrinityToggleNERDTree<CR> 
+" Open and close the NERD_tree.vim separately
+nmap <F11>  :TrinityToggleNERDTree<CR>
 
 """"""""""""""""""""""""""""""""""""""""
 " Source Explorer
 
-" The switch of the Source Explorer 
+" The switch of the Source Explorer
 "nmap <F8> :SrcExplToggle<CR>
 
-" Set the height of Source Explorer window 
-let g:SrcExpl_winHeight = 8 
+" Set the height of Source Explorer window
+let g:SrcExpl_winHeight = 8
 
-" Set 100 ms for refreshing the Source Explorer 
-let g:SrcExpl_refreshTime = 100 
+" Set 100 ms for refreshing the Source Explorer
+let g:SrcExpl_refreshTime = 100
 
-" Set "Enter" key to jump into the exact definition context 
-let g:SrcExpl_jumpKey = "<ENTER>" 
+" Set "Enter" key to jump into the exact definition context
+let g:SrcExpl_jumpKey = "<ENTER>"
 
-" Set "Space" key for back from the definition context 
-let g:SrcExpl_gobackKey = "<SPACE>" 
+" Set "Space" key for back from the definition context
+let g:SrcExpl_gobackKey = "<SPACE>"
 
-" In order to Avoid conflicts, the Source Explorer should know what plugins 
-" are using buffers. And you need add their bufname into the list below 
-" according to the command ":buffers!" 
-let g:SrcExpl_pluginList = [ 
-            \ "__Tag_List__", 
-            \ "[fuf]", 
-            \ "_NERD_tree_", 
-            \ "Source_Explorer" 
+" In order to Avoid conflicts, the Source Explorer should know what plugins
+" are using buffers. And you need add their bufname into the list below
+" according to the command ":buffers!"
+let g:SrcExpl_pluginList = [
+            \ "__Tag_List__",
+            \ "[fuf]",
+            \ "_NERD_tree_",
+            \ "Source_Explorer"
             \ ]
 
-" Enable/Disable the local definition searching, and note that this is not 
-" guaranteed to work, the Source Explorer doesn't check the syntax for now. 
-" It only searches for a match with the keyword according to command 'gd' 
-let g:SrcExpl_searchLocalDef = 1 
+" Enable/Disable the local definition searching, and note that this is not
+" guaranteed to work, the Source Explorer doesn't check the syntax for now.
+" It only searches for a match with the keyword according to command 'gd'
+let g:SrcExpl_searchLocalDef = 1
 
-" Let the Source Explorer update the tags file when opening 
-let g:SrcExpl_isUpdateTags = 1 
+" Let the Source Explorer update the tags file when opening
+let g:SrcExpl_isUpdateTags = 1
 
-" Use program 'ctags' with argument '--sort=foldcase -R' to create or 
-" update a tags file 
-"let g:SrcExpl_updateTagsCmd = "ctags --sort=foldcase -R $PWD" 
+" Use program 'ctags' with argument '--sort=foldcase -R' to create or
+" update a tags file
+"let g:SrcExpl_updateTagsCmd = "ctags --sort=foldcase -R $PWD"
 
-" Set "<F7>" key for updating the tags file artificially 
-"let g:SrcExpl_updateTagsKey = "<F7>" 
+" Set "<F7>" key for updating the tags file artificially
+"let g:SrcExpl_updateTagsKey = "<F7>"
 let g:NERDTreeWinPos = "left"
+
+
+""""""""""""""""""""""""""""""""""""""""
+" CodeComplete
+let g:user_defined_snippets = "~/.vim/plugin/snipMate.vim"
+let g:completekey = "<tab><tab>"   "hotkey
+
+""""""""""""""""""""""""""""""""""""""""
+" SnipMate
+let g:SuperTabMappingForward = "<tab>"
+let g:SuperTabMappingBackward = "<shift><tab>"
+
+""""""""""""""""""""""""""""""""""""""""
+" ColorSchemeExplorer
+nmap <F3> :sp n<cr>:ColorSchemeExplorer<cr>
+
+""""""""""""""""""""""""""""""""""""""""
+" Multi-Color Marker
+
+" You may define your own colors or more than the default 6 highlightings
+" in your vimrc file (or anywhere before this plugin is sourced), in the
+" following form (where N = 1..):
+"highlight MarkWordN ctermbg=Cyan ctermfg=Black guibg=#8CCBEA guifg=Black
+
+"The search type highlighting (in the search message) can be changed via:
+"highlight link SearchSpecialSearchType MoreMsg
+
+"By default, any marked words are also added to the search (/) and input (@)
+"history; if you don't want that, remove the corresponding symbols from:
+"let g:mwHistAdd = "/@"
+
+"You can use different mappings by mapping to the <Plug>Mark... mappings
+"before this plugin is sourced. To remove the default overriding of * and #, use:
+"nmap <Plug>IgnoreMarkSearchNext <Plug>MarkSearchNext
+"nmap <Plug>IgnoreMarkSearchPrev <Plug>MarkSearchPrev

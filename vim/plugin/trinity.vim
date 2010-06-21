@@ -2,7 +2,7 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 " File Name:      trinity.vim
-" Abstract:       A (G)VIM plugin which build the trinity of Source Explorer,  
+" Abstract:       A (G)VIM plugin which build the trinity of Source Explorer,
 "                 TagList and NERD tree to be an IDE for software development.
 " Author:         CHE Wenlong <chewenlong AT buaa.edu.cn>
 " Version:        1.4
@@ -41,22 +41,22 @@ endif
 
 " User interface for switching all the three plugins
 
-command! -nargs=0 -bar TrinityToggleAll 
+command! -nargs=0 -bar TrinityToggleAll
     \ call <SID>Trinity_Toggle()
 
 " User interface for switching the TagList
 
-command! -nargs=0 -bar TrinityToggleTagList 
+command! -nargs=0 -bar TrinityToggleTagList
     \ call <SID>Trinity_ToggleTagList()
 
 " User interface for switching the Source Explorer
 
-command! -nargs=0 -bar TrinityToggleSourceExplorer 
+command! -nargs=0 -bar TrinityToggleSourceExplorer
     \ call <SID>Trinity_ToggleSourceExplorer()
 
 " User interface for switching the NERD tree
 
-command! -nargs=0 -bar TrinityToggleNERDTree 
+command! -nargs=0 -bar TrinityToggleNERDTree
     \ call <SID>Trinity_ToggleNERDTree()
 
 " }}}
@@ -65,7 +65,7 @@ command! -nargs=0 -bar TrinityToggleNERDTree
 
 let s:Trinity_switch         = 0
 let s:Trinity_tabPage        = 0
-let s:Trinity_isDebug        = 0
+let s:Trinity_isDebug        = 1
 let s:Trinity_logPath        = "./trinity.log"
 
 let s:tag_list_switch        = 0
@@ -88,7 +88,7 @@ function! <SID>Trinity_InitTagList()
     " Split to the right side of the screen
     let g:Tlist_Use_Left_Window = 1
     " Set the window width
-    let g:Tlist_WinWidth = 24
+    let g:Tlist_WinWidth = 28
     " Sort by the order
     let g:Tlist_Sort_Type = "order"
     " Do not display the help info
@@ -160,7 +160,7 @@ endfunction " }}}
 
 " Trinity_Debug() {{{
 
-" Log the supplied debug information along with the time 
+" Log the supplied debug information along with the time
 
 function! <SID>Trinity_Debug(log)
 
@@ -188,8 +188,8 @@ function! <SID>Trinity_GetEditWinNR()
     let l:j = 1
 
     let l:pluginList = [
-            \ s:tag_list_title, 
-            \ s:source_explorer_title, 
+            \ s:tag_list_title,
+            \ s:source_explorer_title,
             \ s:nerd_tree_title
         \]
 
@@ -238,7 +238,7 @@ function! <SID>Trinity_UpdateWindow()
             let l:tag_list_winnr = l:i
         endif
 
-        if bufname(winbufnr(l:i)) ==# s:source_explorer_title 
+        if bufname(winbufnr(l:i)) ==# s:source_explorer_title
                 \ || getwinvar(l:i, '&previewwindow')
             let l:source_explorer_winnr = l:i
         endif
