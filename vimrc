@@ -3,6 +3,7 @@
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Get out of VI's compatible mode.
 set nocompatible
+"set backspace=indent,eol,start
 
 " Enable filetype plugin
 filetype plugin on
@@ -31,8 +32,8 @@ set clipboard+=unnamed
 set report=0
 set formatoptions=tcrqn
 set incsearch
-set foldenable
-set foldmethod=indent
+"set foldenable
+"set foldmethod=indent
 nnoremap <silent> <space> @=((foldclosed(line('.')) < 0) ? 'zc':'zo')<CR>
 "Split
 map <silent> <C-v> :vsp<CR>
@@ -41,10 +42,10 @@ noremap <C-h> <C-w>h
 noremap <C-j> <C-w>j
 noremap <C-k> <C-w>k
 noremap <C-l> <C-w>l
-inoremap <C-h> <esc><C-w>h
-inoremap <C-j> <esc><C-w>j
-inoremap <C-k> <esc><C-w>k
-inoremap <C-l> <esc><C-w>l
+"imap <C-h> <esc><C-w>h
+imap <C-j> <esc><C-w>j
+imap <C-k> <esc><C-w>k
+imap <C-l> <esc><C-w>l
 nmap <silent> [ :vertical res -5<CR>
 nmap <silent> ] :vertical res +5<CR>
 "nmap <silent> [ <c-w><
@@ -56,10 +57,8 @@ nmap <leader>vm <C-w>\|
 nmap <leader>q <C-w>=
 
 
-" Display underline on current line
-"set cursorline
-" Display invisible space charactors
-"set invlist
+"set cursorline  " Display underline on current line
+"set invlist     " Display invisible space charactors
 
 """"""""""""""""""""""""""""""""""""""""
 " 设置语言
@@ -110,7 +109,7 @@ nmap <leader>w :w!<cr>
 nmap <leader>l :vsp ~/.vimrc<cr>
 
 " Fast loading .vimrc file
-nmap <leader>s :source ~/.vimrc<cr>
+nmap <leader>rl :source ~/.vimrc<cr>
 
 " Open Expolor in current window
 nmap <leader>e :Explore<cr>
@@ -281,6 +280,7 @@ endfunction
 
 " Open and close all the three plugins on the same time
 nmap <F8>   :TrinityToggleAll<CR>
+"nmap <F8>  :TrinityToggleNERDTree<CR>:TrinityToggleTagList<CR>:TrinityToggleSourceExplorer<CR>
 
 " Open and close the srcexpl.vim separately
 nmap <F9>   :TrinityToggleSourceExplorer<CR>
@@ -338,7 +338,7 @@ let g:NERDTreeWinPos = "left"
 
 """"""""""""""""""""""""""""""""""""""""
 " CodeComplete
-let g:user_defined_snippets = "~/.vim/plugin/snipMate.vim"
+"let g:user_defined_snippets = "~/.vim/plugin/snipMate.vim"
 let g:completekey = "<tab><tab>"   "hotkey
 
 """"""""""""""""""""""""""""""""""""""""
@@ -369,3 +369,31 @@ nmap <F3> :sp n<cr>:ColorSchemeExplorer<cr>
 "before this plugin is sourced. To remove the default overriding of * and #, use:
 "nmap <Plug>IgnoreMarkSearchNext <Plug>MarkSearchNext
 "nmap <Plug>IgnoreMarkSearchPrev <Plug>MarkSearchPrev
+
+""""""""""""""""""""""""""""""""""""""""
+" ErrorMarker
+
+let errormarker_errortext = "Er"
+let errormarker_warningtext = "Wa" "The maximum length is two characters
+"The hightlighting groups that are used to mark the lines that contain warnings and errors can be set by
+let errormarker_errorgroup = "ErrorMsg"
+let errormarker_warninggroup = "Todo"
+
+let errormarker_warningtypes = "wWiI"
+let &errorformat="%f:%l: %t%*[^:]:%m," . &errorformat
+let &errorformat="%f:%l:%c: %t%*[^:]:%m," . &errorformat
+let errormarker_warningtypes = "wW"
+
+""""""""""""""""""""""""""""""""""""""""
+" VimWiki
+map <Leader>we <Plug>VimwikiSplitWord
+map <Leader>wq <Plug>VimwikiVSplitWord
+map <Leader>wb <Plug>VimwikiGoBackWord
+map <Leader>wp <Plug>VimwikiPrevWord
+map <leader>tt <Plug>VimwikiToggleListItem
+map <leader>wtl :VimwikiTableMoveColumnLeft<CR>
+map <leader>wtr :VimwikiTableMoveColumnRight<CR>
+let g:vimwiki_folding=1
+let g:vimwiki_fold_lists=1
+let g:vimwiki_fold_trailing_emtey_lines=1
+let g:vimwiki_hl_cb_checked=1
