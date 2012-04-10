@@ -1,0 +1,8 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =6
+let g:netrw_dirhist_1='/opt/zliu/sdk/sdk-xgs-robo-5.6.6/systems'
+let g:netrw_dirhist_2='/opt/zliu/sdk/sdk-xgs-robo-5.6.6'
+let g:netrw_dirhist_3='/opt/zliu/sdk/sdk-xgs-robo-5.6.6/include'
+let g:netrw_dirhist_4='/opt/zliu/sdk/sdk-xgs-robo-5.6.6/include/bcm'
+let g:netrw_dirhist_5='/opt/zliu/sdk/sdk-xgs-robo-5.6.6/include'
+let g:netrw_dirhist_6='/opt/zliu/sdk/sdk-xgs-robo-5.6.6/include/bcm'

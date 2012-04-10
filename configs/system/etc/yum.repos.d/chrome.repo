@@ -1,0 +1,13 @@
+[google-chrome]
+name=google-chrome - 32-bit
+baseurl=http://dl.google.com/linux/chrome/rpm/stable/i386
+enabled=1
+gpgcheck=1
+gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub
+
+[google-chrome]
+name=google-chrome - 64-bit
+baseurl=http://dl.google.com/linux/chrome/rpm/stable/x86_64
+enabled=1
+gpgcheck=1
+gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub

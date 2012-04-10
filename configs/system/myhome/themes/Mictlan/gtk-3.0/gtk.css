@@ -1,0 +1,99 @@
+/* Originally based of the following theme by CrazyT http://craazyt.deviantart.com/ 
+
+  NAME: Mictlan
+	AUTHOR: elchacmool
+	WEBSITE:http://elchacmool.deviantart.com/ 
+	LICENSE: CC-by-nc-sa
+	DESCRIPTION: A minimalistic and usable GTK3 theme
+*/
+
+/* default color scheme */
+@define-color bg_color #DEDEDE; /*#dcdcdc;*/
+@define-color fg_color #4D4D4D; /*#2c2c2c;*/
+@define-color base_color #DEDEDE;
+@define-color text_color #4D4D4D; /*#2c2c2c;*/
+@define-color selected_bg_color #989898; /* #accd8a; */
+@define-color selected_fg_color #FFF;
+@define-color tooltip_bg_color #4D4D4D;
+@define-color tooltip_fg_color #FFF;
+
+/* other color schemes could simply override these */
+@define-color theme_bg_color @bg_color;
+@define-color theme_fg_color @fg_color;
+@define-color theme_base_color @base_color;
+@define-color theme_text_color @text_color;
+@define-color theme_selected_bg_color @selected_bg_color;
+@define-color theme_selected_fg_color @selected_fg_color;
+@define-color theme_tooltip_bg_color @tooltip_bg_color;
+@define-color theme_tooltip_fg_color @tooltip_fg_color;
+
+/* misc colors used by gtk+ */
+@define-color info_fg_color rgb (181, 171, 156);
+@define-color info_bg_color rgb (252, 252, 189);
+@define-color warning_fg_color rgb (173, 120, 41);
+@define-color warning_bg_color rgb (250, 173, 61);
+@define-color question_fg_color rgb (97, 122, 214);
+@define-color question_bg_color rgb (138, 173, 212);
+@define-color error_fg_color rgb (166, 38, 38);
+@define-color error_bg_color rgb (237, 54, 54);
+@define-color link_color #08C;
+@define-color error_color #cc0000;
+
+/* theme common colors */
+@define-color button_bg_color shade (#DEDEDE, 1.06);
+@define-color button_insensitive_bg_color mix (@button_bg_color, @bg_color, 0.6);
+@define-color dark_bg_color #4D4D4D; /*#3f3f3f;*/
+@define-color dark_fg_color #FFF; /*#e0e0e0; */
+@define-color transparent rgba (0, 0, 0, 0);
+
+/* Zukitwo colors */
+@define-color toolbar_gradient_base #DEDEDE; /* #dcdcdc; */
+@define-color toolbar_gradient_final #C4C4C4; /* #d1d1d1; */
+@define-color toolbar_border #C4C4C4;
+
+@define-color button_gradient_color_a #DEDEDE; /* #fbfbfb;*/
+@define-color button_gradient_color_b #C4C4C4; /* #00B9F2; */
+@define-color button_hover_gradient_color_a shade (@button_gradient_color_a, 1.10);
+@define-color button_hover_gradient_color_b shade (@button_gradient_color_b, 1.10);
+@define-color button_active_gradient_color_a shade (@button_gradient_color_b, 0.80);
+@define-color button_active_gradient_color_b shade (@button_gradient_color_a, 0.80);
+
+@define-color progressbar_through_a #C4C4C4;
+@define-color progressbar_through_b #DEDEDE;
+@define-color progressbar_through_border #D1D1D1;
+@define-color progressbar_background_a #333333; /* #accd8a; */
+@define-color progressbar_background_b #4D4D4D; /* #c3dea8; */
+@define-color progressbar_border #DEDEDE; /* #87a964; */
+
+@define-color menuitem_background_a #666666;
+@define-color menuitem_background_b #4D4D4D;
+
+@define-color theme_border_color_a #DEDEDE;
+@define-color theme_border_color_b #D1D1D1;
+@define-color scrollslider_gradient_a shade (@selected_bg_color, 0.8);
+@define-color scrollslider_gradient_b shade (@selected_bg_color, 0.7);
+@define-color scrollslider_border shade (@selected_bg_color, 0.9);
+@define-color listview_header_gradient_a #D1D1D1;
+@define-color listview_header_gradient_b #C4C4C4;
+@define-color listview_border #D1D1D1;
+@define-color sidebar_color #DEDEDE;
+
+@define-color trough_bg_color_a #D1D1D1;
+@define-color trough_bg_color_b #C4C4C4;
+
+@define-color treeview_even #DEDEDE;
+@define-color treeview_odd #D1D1D1;
+
+@define-color os_chrome_bg_color #C4C4C4;
+@define-color os_chrome_fg_color #eeeeee;
+@define-color os_chrome_selected_bg_color #4D4D4D;
+@define-color os_chrome_selected_fg_color #DEDEDE;
+
+@define-color chrome_bg_color #DEDEDE;
+@define-color chrome_fg_color #eeeeee;
+
+@import url("gtk-widgets.css");
+@import url("gnome-applications.css");
+@import url("apps/nautilus.css");
+@import url("apps/unity.css");
+

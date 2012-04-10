@@ -1,0 +1,26 @@
+[fedora-sohu]
+name=Fedora $releasever - $basearch - sohu
+failovermethod=priority
+baseurl=http://mirrors.sohu.com/fedora/releases/$releasever/Everything/$basearch/os/
+enabled=1
+metadata_expire=7d
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$basearch
+
+[fedora-debuginfo-sohu]
+name=Fedora $releasever - $basearch - Debug - sohu
+failovermethod=priority
+baseurl=http://mirrors.sohu.com/fedora/releases/$releasever/Everything/$basearch/debug/
+enabled=0
+metadata_expire=7d
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$basearch
+
+[fedora-source-sohu]
+name=Fedora $releasever - Source - sohu
+failovermethod=priority
+baseurl=http://mirrors.sohu.com/fedora/releases/$releasever/Everything/source/SRPMS/
+enabled=0
+metadata_expire=7d
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$basearch

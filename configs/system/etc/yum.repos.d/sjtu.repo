@@ -1,0 +1,17 @@
+[Fedora-ftp.sjtu.edu.cn]
+name=Fedora $releasever – $basearch
+baseurl=http://ftp.sjtu.edu.cn/fedora/linux/releases/$releasever/Fedora/$basearch/os/
+enabled=1
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora
+[Everything-ftp.sjtu.edu.cn]
+name=Everything $releasever – $basearch
+baseurl=http://ftp.sjtu.edu.cn/fedora/linux/releases/$releasever/Everything/$basearch/os/
+enabled=1
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora
+[updates-ftp.sjtu.edu.cn]
+name=Fedora updates
+baseurl=http://ftp.sjtu.edu.cn/fedora/linux/updates/$releasever/$basearch/
+enabled=1
+gpgcheck=0
