@@ -1,3 +1,6 @@
 let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =1
-let g:netrw_dirhist_1='/opt/zliu/sdk/sdk-xgs-robo-5.6.6/include/soc'
+let g:netrw_dirhist_cnt =4
+let g:netrw_dirhist_1='/opt/zliu/projects/oceanpark/publish-release'
+let g:netrw_dirhist_2='/opt/zliu/projects/oceanpark/publish-release/source'
+let g:netrw_dirhist_3='/opt/zliu/projects/oceanpark/publish-release/source/package'
+let g:netrw_dirhist_4='/opt/zliu/projects/oceanpark/publish-release/source/package/bcmdriver'

@@ -1,37 +1,12 @@
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Basic VIM settings
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Get out of VI's compatible mode.
-set nocompatible
-"set backspace=indent,eol,start
 
-" Enable filetype plugin
-filetype plugin on
-filetype indent on
-
-" Set to auto read when a file is changed from the outside
-set autoread
 
 set nocp
-syntax on
 "set t_Co=256
 
-""""""""""""""""""""""""""""""""""""""""
-"设置缩进
-set ai                              "autoindent(ai)
-set cindent                         "C语言缩进
-set shiftwidth=4                    "设置缩进长度(sw)
-set tabstop=4                       "设置tab长度(ts)
-set expandtab                       "设置空格替代tab
-set smarttab                        "行首tab的四个空格可以整个删除
-set smartindent
-
-set number
 colorscheme elflord
 set clipboard+=unnamed
 set report=0
 set formatoptions=tcrqn
-set incsearch
 "set foldenable
 "set foldmethod=indent
 nnoremap <silent> <space> @=((foldclosed(line('.')) < 0) ? 'zc':'zo')<CR>
@@ -55,45 +30,6 @@ nmap <silent> _ :res +1<CR>
 nmap <leader>hm <C-w>_
 nmap <leader>vm <C-w>\|
 nmap <leader>q <C-w>=
-
-
-"set cursorline  " Display underline on current line
-"set invlist     " Display invisible space charactors
-
-""""""""""""""""""""""""""""""""""""""""
-" 设置语言
-set encoding=utf-8
-set termencoding=utf-8
-"set fileencoding=chinese
-set fileencodings=utf-8,gbk,ucs-bom,chinese
-let &termencoding=&encoding
-
-""""""""""""""""""""""""""""""""""""""""
-" 非xterm终端下退出vim可以restorescreen
-if &term != "xterm"
-    " SecureCRT versions prior to 6.1.x do not support 4-digit DECSET
-    "     let &t_ti = "\<Esc>[?1049h"
-    "     let &t_te = "\<Esc>[?1049l"
-    " Use 2-digit DECSET instead
-    let &t_ti = "\<Esc>[?47h"
-    let &t_te = "\<Esc>[?47l"
-endif
-
-
-""""""""""""""""""""""""""""""""""""""""
-"  switch wrap mode
-let g:wrapmode=1
-nmap <silent> <F4> :call ToggleWrapMode()<CR>
-function! ToggleWrapMode()
-    if g:wrapmode == 0
-        set wrap
-        let g:wrapmode=1
-    else
-        set nowrap
-        let g:wrapmode=0
-    endif
-endfunction
-
 
 """"""""""""""""""""""""""""""""""""""""
 " => Set mapleader
@@ -165,21 +101,6 @@ function! AutoNewLine(char)
 endf
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Plugin settings
-
-""""""""""""""""""""""""""""""""""""""""
-" NERDcomment setting
-" let NERDSpaceDelims=1 "insert a space between '/*' and '*/'
-imap <C-c> <SPACE><plug>NERDCommenterInInsert
-let NERD_cpp_alt_style=1
-""""""""""""""""""""""""""""""""""""""""
-" Taglist shortcuts
-map <silent> <F12> :TlistToggle<cr>
-let Tlist_Show_One_File = 0            "不同时显示多个文件的tag，只显示当前文件的
-let Tlist_Exit_OnlyWindow = 1          "如果taglist窗口是最后一个窗口，则退出vim
-let Tlist_Use_Right_Window = 1         "在右侧窗口中显示taglist窗口
-let Tlist_WinWidth = 35                "taglist窗口宽度
-let Tlist_Auto_Update = 1              "自动更新tag列表
-let Tlist_File_Fold_Auto_Close = 1     "自动折叠非活动文件的tag列表
 
 """"""""""""""""""""""""""""""""""""""""
 " netrw setting
@@ -349,26 +270,6 @@ let g:SuperTabMappingBackward = "<shift><tab>"
 """"""""""""""""""""""""""""""""""""""""
 " ColorSchemeExplorer
 nmap <F3> :sp n<cr>:ColorSchemeExplorer<cr>
-
-""""""""""""""""""""""""""""""""""""""""
-" Multi-Color Marker
-
-" You may define your own colors or more than the default 6 highlightings
-" in your vimrc file (or anywhere before this plugin is sourced), in the
-" following form (where N = 1..):
-"highlight MarkWordN ctermbg=Cyan ctermfg=Black guibg=#8CCBEA guifg=Black
-
-"The search type highlighting (in the search message) can be changed via:
-"highlight link SearchSpecialSearchType MoreMsg
-
-"By default, any marked words are also added to the search (/) and input (@)
-"history; if you don't want that, remove the corresponding symbols from:
-"let g:mwHistAdd = "/@"
-
-"You can use different mappings by mapping to the <Plug>Mark... mappings
-"before this plugin is sourced. To remove the default overriding of * and #, use:
-"nmap <Plug>IgnoreMarkSearchNext <Plug>MarkSearchNext
-"nmap <Plug>IgnoreMarkSearchPrev <Plug>MarkSearchPrev
 
 """"""""""""""""""""""""""""""""""""""""
 " ErrorMarker

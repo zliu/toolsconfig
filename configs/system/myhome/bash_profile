@@ -10,3 +10,7 @@ fi
 PATH=$PATH:$HOME/.local/bin:$HOME/bin:$HOME/tools/scripts:$HOME/disk2/sdk/montavista/pro/devkit/ppc/82xx/bin
 
 export PATH
+export PPC_TOOLCHAIN_DIR=/opt/zliu/sdk/montavista/pro/devkit/ppc/82xx/bin
+export PPC_CROSS_COMPILE_PREFIX=ppc_82xx-
+export PPC_LINUX=/opt/zliu/sdk/montavista/pro/devkit/lsp/motorola-sandpoint-ppc_82xx/linux-2.4.31
+export PPC_LINUX_INCLUDE=$PPC_LINUX/include

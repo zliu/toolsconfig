@@ -6,20 +6,25 @@ if [ -f /etc/bashrc ]; then
 fi
 
 # User specific aliases and functions
-alias rm='/home/zliu/tools/scripts/delete'
+#alias rm='/home/zliu/tools/scripts/delete'
 alias set1.8='pushd /home/zliu/disk2/sdk/oct-1.8/OCTEON-SDK-1.8.1;source env-setup OCTEON_CN56XX_PASS2;popd'
 alias set2.3='pushd /home/zliu/disk2/sdk/oct-2.3;source env-setup OCTEON_CN61XX_PASS1_0;popd'
 alias diff='colordiff --exclude .svn --exclude .git'
 alias tree='tree -hNCF --du'
+alias updp='vi ~/.bash_profile; source ~/.bash_profile'
+alias updr='vi ~/.bashrc; source ~/.bashrc'
+alias goagentstart='python /home/zliu/disk2/projects/goagent/local/proxy.py 1>/var/log/goagent.log 2>/var/log/goagent.err.log'
+alias goagentstop='kill `ps aux|grep goagent |sed "s/\(.*\) *\(.*\) *.*/\2/"`'
 
 # PS1 ：命令行提示符
-export PS1="\[\e[1;32m\][\[\e[0;1;5;35m\]\u\[\e[0;1;31m\]@\h \[\e[36m\] -----------------------------------------------------${PS_DATE} \n \W\[\e[32m\] ]\033[m\$ "
+export PS1="\n\[\e[1;32m\][\[\e[1;5;33m\]\u\[\e[35m\]@\[\e[1;31m\]\H \[\e[36m\] ----\d [\t]---- \[\e[0;36m\] \w \n|
+| \W\[\e[32m\] ]\[\033[m\]\$ "
 
 # PS2 ：延续命令行提示符
 # PS3 ：脚本中select语句提示符
 # PS4 ：调试模式下脚本命令提示符("set -x"提示所执行命令)
 # PROMPT_COMMAND ：Bash shell在显示PS1提示符前所执行的命令
-export PROMPT_COMMAND="PS_DATE=hello~"
+export PROMPT_COMMAND="PS_DATE=$(date +%Y年%m月%d日-%A-[%H:%M:%S])"
 # 转义符号	意义
 # \a	响铃(ASCII 0x07)
 # \d	日期(格式：星期 月 日)

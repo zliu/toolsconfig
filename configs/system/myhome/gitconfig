@@ -14,8 +14,12 @@
 	showconfig = config --list
 	ci = commit
 	difflast = diff ^HEAD
+	proxyon = config --global http.proxy localhost:8087
+	proxyoff = config --global http.proxy ''
 [color]
 	branch = auto
 	interactive = auto
 	status = auto
 	diff = auto
+[http]
+	proxy = 
