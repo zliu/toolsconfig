@@ -1,0 +1,6 @@
+[liangsuilong]
+name=Liang Suilong
+baseurl=http://dl.dropbox.com/u/1352061/yum/$releasever/$basearch/
+http://liangsuilong.fedorapeople.org/yum/$releasever/$basearch/
+enabled=1
+gpgcheck=0
