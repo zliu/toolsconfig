@@ -13,3 +13,6 @@
 [submodule "configs/system/myhome/vim/bundle/snipmate"]
 	path = configs/system/myhome/vim/bundle/snipmate
 	url = https://github.com/msanders/snipmate.vim.git
+[submodule "configs/system/myhome/vim/bundle/indent-guide"]
+	path = configs/system/myhome/vim/bundle/indent-guide
+	url = https://github.com/nathanaelkane/vim-indent-guides.git
