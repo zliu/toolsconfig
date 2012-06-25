@@ -5,7 +5,7 @@ call pathogen#helptags()
 " Basic VIM settings
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Get out of VI's compatible mode.
-" set nocompatible
+set nocompatible
 " set backspace=indent,eol,start
 syntax on
 " Enable filetype plugin
@@ -104,3 +104,19 @@ nmap <Leader>N <Plug>MarkAllClear
 nmap <C-c> <Plug>NERDCommenterInsert
 let NERD_cpp_alt_style=1
 let NERDAllowAnyVisualDelims=1
+""""""""""""""""""""""""""""""""""""""""
+" Vim-Indent-Guides
+let g:indent_guides_start_level=2
+let g:indent_guides_guide_size=1
+set ts=4 sw=2 et
+
+map <Leader>ch :call SetColorColumn()<CR>
+function! SetColorColumn()
+  let col_num = virtcol(".")
+  let cc_list = split(&cc, ',')
+  if count(cc_list, string(col_num)) <= 0
+    execute "set cc+=".col_num
+  else
+    execute "set cc-=".col_num
+  endif
+endfunction

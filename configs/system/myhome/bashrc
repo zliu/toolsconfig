@@ -15,6 +15,7 @@ alias updp='vi ~/.bash_profile; source ~/.bash_profile'
 alias updr='vi ~/.bashrc; source ~/.bashrc'
 alias goagentstart='python /home/zliu/disk2/projects/goagent/local/proxy.py 1>/var/log/goagent.log 2>/var/log/goagent.err.log'
 alias goagentstop='kill `ps aux|grep goagent |sed "s/\(.*\) *\(.*\) *.*/\2/"`'
+alias grep='grep --exclude-dir=.svn --exclude-dir=.git --color'
 
 # PS1 ：命令行提示符
 export PS1="\n\[\e[1;32m\][\[\e[1;5;33m\]\u\[\e[35m\]@\[\e[1;31m\]\H \[\e[36m\] ----\d [\t]---- \[\e[0;36m\] \w \n|
