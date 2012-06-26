@@ -16,6 +16,7 @@
 	difflast = diff ^HEAD
 	proxyon = config --global http.proxy localhost:8087
 	proxyoff = config --global http.proxy ''
+	lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
 [color]
 	branch = auto
 	interactive = auto
