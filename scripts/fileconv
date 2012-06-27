@@ -1,0 +1,3 @@
+#!/bin/sh
+enca -L zh_CN -x UTF-8 $*
+dos2unix $*
