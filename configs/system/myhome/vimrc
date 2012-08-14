@@ -10,7 +10,9 @@ set nocompatible
 syntax on
 " Enable filetype plugin
 filetype plugin indent on
+set t_Co=256
 colorscheme elflord
+" breeze candycode dante darkblue Chocolateliquor
 " Set to auto read when a file is changed from the outside
 " set autoread
 
@@ -26,6 +28,7 @@ set smartindent
 
 set number
 set incsearch
+set hlsearch
 
 "set cursorline  " Display underline on current line
 "set invlist     " Display invisible space charactors
@@ -120,3 +123,7 @@ function! SetColorColumn()
     execute "set cc-=".col_num
   endif
 endfunction
+
+""""""""""""""""""""""""""""""""""""""""
+" grep
+nnoremap <silent> <F3> :Grep<CR>
