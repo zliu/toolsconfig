@@ -7,6 +7,7 @@ call pathogen#helptags()
 " Get out of VI's compatible mode.
 set nocompatible
 " set backspace=indent,eol,start
+set laststatus=2   " Always show the statusline
 syntax on
 " Enable filetype plugin
 filetype plugin indent on
@@ -22,9 +23,12 @@ set ai                              "autoindent(ai)
 set cindent                         "C语言缩进
 set shiftwidth=4                    "设置缩进长度(sw)
 set tabstop=4                       "设置tab长度(ts)
+"set bs=2                           "在insert模式下用退格键删除
+"set showmatch                      "代码匹配
 set expandtab                       "设置空格替代tab
 set smarttab                        "行首tab的四个空格可以整个删除
 set smartindent
+"set foldmethod=syntax
 
 set number
 set incsearch
@@ -32,6 +36,13 @@ set hlsearch
 
 "set cursorline  " Display underline on current line
 "set invlist     " Display invisible space charactors
+"Split
+map <silent> <C-v> :vsp<CR>
+map <silent> <C-s> :sp<CR>
+noremap <C-h> <C-w>h
+noremap <C-j> <C-w>j
+noremap <C-k> <C-w>k
+noremap <C-l> <C-w>l
 
 """"""""""""""""""""""""""""""""""""""""
 " 设置语言
@@ -51,7 +62,6 @@ if &term != "xterm"
     let &t_ti = "\<Esc>[?47h"
     let &t_te = "\<Esc>[?47l"
 endif
-
 """"""""""""""""""""""""""""""""""""""""
 "  switch wrap mode
 let g:wrapmode=1
@@ -77,7 +87,7 @@ let g:mapleader = ","
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Plugin settings
+" Plugin settings {{
 
 """"""""""""""""""""""""""""""""""""""""
 """"""""""""""""""""""""""""""""""""""""
@@ -127,3 +137,28 @@ endfunction
 """"""""""""""""""""""""""""""""""""""""
 " grep
 nnoremap <silent> <F3> :Grep<CR>
+
+if has("syntax") && (&t_Co > 2 || has("gui_running"))
+  syntax on
+  function! ActivateInvisibleCharIndicator()
+    syntax match TrailingSpace "[ \t]\+$" display containedin=ALL
+    highlight TrailingSpace ctermbg=Red
+  endf
+  autocmd BufNewFile,BufRead * call ActivateInvisibleCharIndicator()
+endif
+" Show tabs, trailing whitespace, and continued lines visually
+set list listchars=tab:»·,trail:·,extends:…
+
+" highlight overly long lines same as TODOs.
+set textwidth=280
+autocmd BufNewFile,BufRead *.c,*.h exec 'match Todo /\%>' . &textwidth . 'v.\+/'
+
+"powerline{
+"set guifont=DejaVu\ Sans\ Mono\ for\ Powerline\ 10
+set guifont=Ubuntu\ Mono\ for\ Powerline\ 12
+"set guifont=Consolas\ for\ Powerline\ FixedD:h9
+let g:Powerline_symbols = 'fancy'
+"}
+"
+"
+"}}
