@@ -23,4 +23,5 @@
 	status = auto
 	diff = auto
 [http]
-	proxy = 127.0.0.1:8580
+	proxy = localhost:8087
+	sslVerify = false
