@@ -155,10 +155,11 @@ autocmd BufNewFile,BufRead *.c,*.h exec 'match Todo /\%>' . &textwidth . 'v.\+/'
 
 "powerline{
 "set guifont=DejaVu\ Sans\ Mono\ for\ Powerline\ 10
-set guifont=Ubuntu\ Mono\ for\ Powerline\ 12
+"set guifont=Ubuntu\ Mono\ for\ Powerline\ 12
 "set guifont=Consolas\ for\ Powerline\ FixedD:h9
-let g:Powerline_symbols = 'fancy'
+"let g:Powerline_symbols = 'fancy'
 "}
 "
 "
 "}}
+set rtp+=/home/zliu/projects/github/powerline/powerline/bindings/vim
