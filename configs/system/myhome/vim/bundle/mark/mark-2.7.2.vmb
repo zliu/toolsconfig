@@ -2,7 +2,7 @@
 UseVimball
 finish
 autoload/mark.vim	[[[1
-956
+1039
 " Script Name: mark.vim
 " Description: Highlight several words in different colors simultaneously.
 "
@@ -15,8 +15,28 @@ autoload/mark.vim	[[[1
 " Dependencies:
 "  - SearchSpecial.vim autoload script (optional, for improved search messages).
 "
-" Version:     2.6.2
+" Version:     2.7.2
 " Changes:
+" 15-Oct-2012, Ingo Karkat
+" - Issue an error message "No marks defined" instead of moving the cursor by
+"   one character when there are no marks (e.g. initially or after :MarkClear).
+" - Enable custom integrations via new mark#GetNum() and mark#GetPattern()
+"   functions.
+"
+" 13-Sep-2012, Ingo Karkat
+" - Enable alternative * / # mappings that do not remember the last search type
+"   by adding optional search function argument to mark#SearchNext().
+"
+" 04-Jul-2012, Ingo Karkat
+" - ENH: Handle on-the-fly change of mark highlighting via mark#ReInit(), which
+"   truncates / expands s:pattern and corrects the indices. Also, w:mwMatch List
+"   size mismatches must be handled in s:MarkMatch().
+"
+" 23-Apr-2012, Ingo Karkat + fanhe
+" - Force case via \c / \C instead of temporarily unsetting 'smartcase'.
+" - Allow to override 'ignorecase' setting via g:mwIgnoreCase. Thanks to fanhe
+"   for the idea and sending a patch.
+"
 " 26-Mar-2012, Ingo Karkat
 " - ENH: When a [count] exceeding the number of available mark groups is given,
 "   a summary of marks is given and the user is asked to select a mark group.
@@ -220,6 +240,9 @@ endif
 function! s:EscapeText( text )
 	return substitute( escape(a:text, '\' . '^$.*[~'), "\n", '\\n', 'ge' )
 endfunction
+function! s:IsIgnoreCase( expr )
+	return ((exists('g:mwIgnoreCase') ? g:mwIgnoreCase : &ignorecase) && a:expr !~# '\\\@<!\\C')
+endfunction
 " Mark the current word, like the built-in star command.
 " If the cursor is on an existing mark, remove it.
 function! mark#MarkCurrentWord( groupNum )
@@ -289,6 +312,18 @@ endfunction
 function! s:MarkMatch( indices, expr )
 	if ! exists('w:mwMatch')
 		let w:mwMatch = repeat([0], s:markNum)
+	elseif len(w:mwMatch) != s:markNum
+		" The number of marks has changed.
+		if len(w:mwMatch) > s:markNum
+			" Truncate the matches.
+			for l:match in filter(w:mwMatch[s:markNum : ], 'v:val > 0')
+				silent! call matchdelete(l:match)
+			endfor
+			let w:mwMatch = w:mwMatch[0 : (s:markNum - 1)]
+		else
+			" Expand the matches.
+			let w:mwMatch += repeat([0], (s:markNum - len(w:mwMatch)))
+		endif
 	endif
 
 	for l:index in a:indices
@@ -305,7 +340,7 @@ function! s:MarkMatch( indices, expr )
 		" 'ignorecase' and 'smartcase' settings.
 		" Make the match according to the 'ignorecase' setting, like the star command.
 		" (But honor an explicit case-sensitive regexp via the /\C/ atom.)
-		let l:expr = ((&ignorecase && a:expr !~# '\\\@<!\\C') ? '\c' . a:expr : a:expr)
+		let l:expr = (s:IsIgnoreCase(a:expr) ? '\c' : '') . a:expr
 
 		" To avoid an arbitrary ordering of highlightings, we assign a different
 		" priority based on the highlight group, and ensure that the highest
@@ -566,11 +601,12 @@ function! mark#CurrentMark()
 	let i = s:markNum - 1
 	while i >= 0
 		if ! empty(s:pattern[i])
+			let matchPattern = (s:IsIgnoreCase(s:pattern[i]) ? '\c' : '\C') . s:pattern[i]
 			" Note: col() is 1-based, all other indexes zero-based!
 			let start = 0
 			while start >= 0 && start < strlen(line) && start < col('.')
-				let b = match(line, s:pattern[i], start)
-				let e = matchend(line, s:pattern[i], start)
+				let b = match(line, matchPattern, start)
+				let e = matchend(line, matchPattern, start)
 				if b < col('.') && col('.') <= e
 					return [s:pattern[i], [line('.'), (b + 1)], i]
 				endif
@@ -601,19 +637,31 @@ function! mark#SearchCurrentMark( isBackward )
 	endif
 endfunction
 
-function! s:ErrorMessage( searchType, searchPattern, isBackward )
-	if &wrapscan
-		let v:errmsg = a:searchType . ' not found: ' . a:searchPattern
-	else
-		let v:errmsg = printf('%s search hit %s without match for: %s', a:searchType, (a:isBackward ? 'TOP' : 'BOTTOM'), a:searchPattern)
-	endif
+function! s:ErrorMsg( text )
+	let v:errmsg = a:text
 	echohl ErrorMsg
 	echomsg v:errmsg
 	echohl None
 endfunction
+function! s:NoMarkErrorMessage()
+	call s:ErrorMsg('No marks defined')
+endfunction
+function! s:ErrorMessage( searchType, searchPattern, isBackward )
+	if &wrapscan
+		let l:errmsg = a:searchType . ' not found: ' . a:searchPattern
+	else
+		let l:errmsg = printf('%s search hit %s without match for: %s', a:searchType, (a:isBackward ? 'TOP' : 'BOTTOM'), a:searchPattern)
+	endif
+	call s:ErrorMsg(l:errmsg)
+endfunction
 
 " Wrapper around search() with additonal search and error messages and "wrapscan" warning.
 function! s:Search( pattern, isBackward, currentMarkPosition, searchType )
+	if empty(a:pattern)
+		call s:NoMarkErrorMessage()
+		return 0
+	endif
+
 	let l:save_view = winsaveview()
 
 	" searchpos() obeys the 'smartcase' setting; however, this setting doesn't
@@ -622,8 +670,9 @@ function! s:Search( pattern, isBackward, currentMarkPosition, searchType )
 	" result from the *-command-alike mappings should not obey 'smartcase' (like
 	" the * command itself), anyway. If the :Mark command wants to support
 	" 'smartcase', it'd have to emulate that into the regular expression.
-	let l:save_smartcase = &smartcase
-	set nosmartcase
+	" Instead of temporarily unsetting 'smartcase', we force the correct
+	" case-matching behavior through \c / \C.
+	let l:searchPattern = (s:IsIgnoreCase(a:pattern) ? '\c' : '\C') . a:pattern
 
 	let l:count = v:count1
 	let l:isWrapped = 0
@@ -633,7 +682,7 @@ function! s:Search( pattern, isBackward, currentMarkPosition, searchType )
 		let [l:prevLine, l:prevCol] = [line('.'), col('.')]
 
 		" Search for next match, 'wrapscan' applies.
-		let [l:line, l:col] = searchpos( a:pattern, (a:isBackward ? 'b' : '') )
+		let [l:line, l:col] = searchpos( l:searchPattern, (a:isBackward ? 'b' : '') )
 
 "****D echomsg '****' a:isBackward string([l:line, l:col]) string(a:currentMarkPosition) l:count
 		if a:isBackward && l:line > 0 && [l:line, l:col] == a:currentMarkPosition && l:count == v:count1
@@ -679,7 +728,6 @@ function! s:Search( pattern, isBackward, currentMarkPosition, searchType )
 			break
 		endif
 	endwhile
-	let &smartcase = l:save_smartcase
 
 	" We're not stuck when the search wrapped around and landed on the current
 	" mark; that's why we exclude a possible wrap-around via v:count1 == 1.
@@ -750,18 +798,16 @@ function! mark#SearchAnyMark( isBackward )
 endfunction
 
 " Search last searched mark.
-function! mark#SearchNext( isBackward )
+function! mark#SearchNext( isBackward, ... )
 	let l:markText = mark#CurrentMark()[0]
 	if empty(l:markText)
-		return 0
-	else
-		if s:lastSearch == -1
-			call mark#SearchAnyMark(a:isBackward)
-		else
-			call mark#SearchCurrentMark(a:isBackward)
-		endif
-		return 1
+		return 0    " Fall back to the built-in * / # command (done by the mapping).
 	endif
+
+	" Use the provided search type or choose depending on last use of
+	" <Plug>MarkSearchCurrentNext / <Plug>MarkSearchAnyNext.
+	call call(a:0 ? a:1 : (s:lastSearch == -1 ? 'mark#SearchAnyMark' : 'mark#SearchCurrentMark'), [a:isBackward])
+	return 1
 endfunction
 
 " Load mark patterns from list.
@@ -788,12 +834,12 @@ function! mark#ToPatternList()
 	" may differ on the next invocation (e.g. due to a different number of
 	" highlight groups in Vim and GVIM). We want to keep empty patterns in the
 	" front and middle to maintain the mapping to highlight groups, though.
-	let l:highestNonEmptyIndex = s:markNum -1
+	let l:highestNonEmptyIndex = s:markNum - 1
 	while l:highestNonEmptyIndex >= 0 && empty(s:pattern[l:highestNonEmptyIndex])
 		let l:highestNonEmptyIndex -= 1
 	endwhile
 
-	return (l:highestNonEmptyIndex < 0 ? [] : s:pattern[0:l:highestNonEmptyIndex])
+	return (l:highestNonEmptyIndex < 0 ? [] : s:pattern[0 : l:highestNonEmptyIndex])
 endfunction
 
 " :MarkLoad command.
@@ -931,6 +977,23 @@ function! mark#GetGroupNum()
 endfunction
 
 
+"- integrations ----------------------------------------------------------------
+
+" Access the number of possible marks.
+function! mark#GetNum()
+	return s:markNum
+endfunction
+
+" Access the current / passed index pattern.
+function! mark#GetPattern( ... )
+	if a:0
+		return s:pattern[a:1]
+	else
+		return (s:lastSearch == -1 ? '' : s:pattern[s:lastSearch])
+	endif
+endfunction
+
+
 "- initializations ------------------------------------------------------------
 augroup Mark
 	autocmd!
@@ -949,6 +1012,26 @@ function! mark#Init()
 	let s:lastSearch = -1
 	let s:enabled = 1
 endfunction
+function! mark#ReInit( newMarkNum )
+	if a:newMarkNum < s:markNum " There are less marks than before.
+		" Clear the additional highlight groups.
+		for i in range(a:newMarkNum + 1, s:markNum)
+			execute 'highlight clear MarkWord' . (i + 1)
+		endfor
+
+		" Truncate the mark patterns.
+		let s:pattern = s:pattern[0 : (a:newMarkNum - 1)]
+
+		" Correct any indices.
+		let s:cycle = min([s:cycle, (a:newMarkNum - 1)])
+		let s:lastSearch = (s:lastSearch < a:newMarkNum ? s:lastSearch : -1)
+	elseif a:newMarkNum > s:markNum " There are more marks than before.
+		" Expand the mark patterns.
+		let s:pattern += repeat([''], (a:newMarkNum - s:markNum))
+	endif
+
+	let s:markNum = a:newMarkNum
+endfunction
 
 call mark#Init()
 if exists('g:mwDoDeferredLoad') && g:mwDoDeferredLoad
@@ -959,8 +1042,146 @@ else
 endif
 
 " vim: ts=4 sts=0 sw=4 noet
+autoload/mark/palettes.vim	[[[1
+136
+" mark/palettes.vim: Additional palettes for mark highlighting.
+"
+" DEPENDENCIES:
+"
+" Copyright: (C) 2012 Ingo Karkat
+"   The VIM LICENSE applies to this script; see ':help copyright'.
+"
+" Maintainer:	Ingo Karkat <ingo@karkat.de>
+" Contributors: rockybalboa4
+"
+" Version:     2.7.0
+" Changes:
+" 04-Jul-2012, Ingo Karkat
+" - Add "maximum" palette contributed by rockybalboa4 and move it and the
+"   "extended" palette to a separate mark/palettes.vim autoload script.
+
+function! mark#palettes#Extended()
+	return [
+		\   { 'ctermbg':'Blue',       'ctermfg':'Black', 'guibg':'#A1B7FF', 'guifg':'#001E80' },
+		\   { 'ctermbg':'Magenta',    'ctermfg':'Black', 'guibg':'#FFA1C6', 'guifg':'#80005D' },
+		\   { 'ctermbg':'Green',      'ctermfg':'Black', 'guibg':'#ACFFA1', 'guifg':'#0F8000' },
+		\   { 'ctermbg':'Yellow',     'ctermfg':'Black', 'guibg':'#FFE8A1', 'guifg':'#806000' },
+		\   { 'ctermbg':'DarkCyan',   'ctermfg':'Black', 'guibg':'#D2A1FF', 'guifg':'#420080' },
+		\   { 'ctermbg':'Cyan',       'ctermfg':'Black', 'guibg':'#A1FEFF', 'guifg':'#007F80' },
+		\   { 'ctermbg':'DarkBlue',   'ctermfg':'Black', 'guibg':'#A1DBFF', 'guifg':'#004E80' },
+		\   { 'ctermbg':'DarkMagenta','ctermfg':'Black', 'guibg':'#A29CCF', 'guifg':'#120080' },
+		\   { 'ctermbg':'DarkRed',    'ctermfg':'Black', 'guibg':'#F5A1FF', 'guifg':'#720080' },
+		\   { 'ctermbg':'Brown',      'ctermfg':'Black', 'guibg':'#FFC4A1', 'guifg':'#803000' },
+		\   { 'ctermbg':'DarkGreen',  'ctermfg':'Black', 'guibg':'#D0FFA1', 'guifg':'#3F8000' },
+		\   { 'ctermbg':'Red',        'ctermfg':'Black', 'guibg':'#F3FFA1', 'guifg':'#6F8000' },
+		\   { 'ctermbg':'White',      'ctermfg':'Gray',  'guibg':'#E3E3D2', 'guifg':'#999999' },
+		\   { 'ctermbg':'LightGray',  'ctermfg':'White', 'guibg':'#D3D3C3', 'guifg':'#666666' },
+		\   { 'ctermbg':'Gray',       'ctermfg':'Black', 'guibg':'#A3A396', 'guifg':'#222222' },
+		\   { 'ctermbg':'Black',      'ctermfg':'White', 'guibg':'#53534C', 'guifg':'#DDDDDD' },
+		\   { 'ctermbg':'Black',      'ctermfg':'Gray',  'guibg':'#131311', 'guifg':'#AAAAAA' },
+		\   { 'ctermbg':'Blue',       'ctermfg':'White', 'guibg':'#0000FF', 'guifg':'#F0F0FF' },
+		\   { 'ctermbg':'DarkRed',    'ctermfg':'White', 'guibg':'#FF0000', 'guifg':'#FFFFFF' },
+		\]
+endfunction
+
+function! mark#palettes#Maximum()
+		let l:palette = [
+		\   { 'ctermbg':'Cyan',       'ctermfg':'Black', 'guibg':'#8CCBEA', 'guifg':'Black' },
+		\   { 'ctermbg':'Green',      'ctermfg':'Black', 'guibg':'#A4E57E', 'guifg':'Black' },
+		\   { 'ctermbg':'Yellow',     'ctermfg':'Black', 'guibg':'#FFDB72', 'guifg':'Black' },
+		\   { 'ctermbg':'Red',        'ctermfg':'Black', 'guibg':'#FF7272', 'guifg':'Black' },
+		\   { 'ctermbg':'Magenta',    'ctermfg':'Black', 'guibg':'#FFB3FF', 'guifg':'Black' },
+		\   { 'ctermbg':'Blue',       'ctermfg':'Black', 'guibg':'#9999FF', 'guifg':'Black' },
+		\]
+		if has('gui_running') || &t_Co >= 88
+		let l:palette += [
+		\   { 'ctermfg':'White',      'ctermbg':'17',    'guifg':'White',   'guibg':'#00005f' },
+		\   { 'ctermfg':'White',      'ctermbg':'22',    'guifg':'White',   'guibg':'#005f00' },
+		\   { 'ctermfg':'White',      'ctermbg':'23',    'guifg':'White',   'guibg':'#005f5f' },
+		\   { 'ctermfg':'White',      'ctermbg':'27',    'guifg':'White',   'guibg':'#005fff' },
+		\   { 'ctermfg':'White',      'ctermbg':'29',    'guifg':'White',   'guibg':'#00875f' },
+		\   { 'ctermfg':'White',      'ctermbg':'34',    'guifg':'White',   'guibg':'#00af00' },
+		\   { 'ctermfg':'Black',      'ctermbg':'37',    'guifg':'Black',   'guibg':'#00afaf' },
+		\   { 'ctermfg':'Black',      'ctermbg':'43',    'guifg':'Black',   'guibg':'#00d7af' },
+		\   { 'ctermfg':'Black',      'ctermbg':'47',    'guifg':'Black',   'guibg':'#00ff5f' },
+		\   { 'ctermfg':'White',      'ctermbg':'52',    'guifg':'White',   'guibg':'#5f0000' },
+		\   { 'ctermfg':'White',      'ctermbg':'53',    'guifg':'White',   'guibg':'#5f005f' },
+		\   { 'ctermfg':'White',      'ctermbg':'58',    'guifg':'White',   'guibg':'#5f5f00' },
+		\   { 'ctermfg':'White',      'ctermbg':'60',    'guifg':'White',   'guibg':'#5f5f87' },
+		\   { 'ctermfg':'White',      'ctermbg':'64',    'guifg':'White',   'guibg':'#5f8700' },
+		\   { 'ctermfg':'White',      'ctermbg':'65',    'guifg':'White',   'guibg':'#5f875f' },
+		\   { 'ctermfg':'Black',      'ctermbg':'66',    'guifg':'Black',   'guibg':'#5f8787' },
+		\   { 'ctermfg':'Black',      'ctermbg':'72',    'guifg':'Black',   'guibg':'#5faf87' },
+		\   { 'ctermfg':'Black',      'ctermbg':'74',    'guifg':'Black',   'guibg':'#5fafd7' },
+		\   { 'ctermfg':'Black',      'ctermbg':'78',    'guifg':'Black',   'guibg':'#5fd787' },
+		\   { 'ctermfg':'Black',      'ctermbg':'79',    'guifg':'Black',   'guibg':'#5fd7af' },
+		\   { 'ctermfg':'Black',      'ctermbg':'85',    'guifg':'Black',   'guibg':'#5fffaf' },
+		\]
+		endif
+		if has('gui_running') || &t_Co >= 256
+		let l:palette += [
+		\   { 'ctermfg':'White',      'ctermbg':'90',    'guifg':'White',   'guibg':'#870087' },
+		\   { 'ctermfg':'White',      'ctermbg':'95',    'guifg':'White',   'guibg':'#875f5f' },
+		\   { 'ctermfg':'White',      'ctermbg':'96',    'guifg':'White',   'guibg':'#875f87' },
+		\   { 'ctermfg':'Black',      'ctermbg':'101',   'guifg':'Black',   'guibg':'#87875f' },
+		\   { 'ctermfg':'Black',      'ctermbg':'107',   'guifg':'Black',   'guibg':'#87af5f' },
+		\   { 'ctermfg':'Black',      'ctermbg':'114',   'guifg':'Black',   'guibg':'#87d787' },
+		\   { 'ctermfg':'Black',      'ctermbg':'117',   'guifg':'Black',   'guibg':'#87d7ff' },
+		\   { 'ctermfg':'Black',      'ctermbg':'118',   'guifg':'Black',   'guibg':'#87ff00' },
+		\   { 'ctermfg':'Black',      'ctermbg':'122',   'guifg':'Black',   'guibg':'#87ffd7' },
+		\   { 'ctermfg':'White',      'ctermbg':'130',   'guifg':'White',   'guibg':'#af5f00' },
+		\   { 'ctermfg':'White',      'ctermbg':'131',   'guifg':'White',   'guibg':'#af5f5f' },
+		\   { 'ctermfg':'Black',      'ctermbg':'133',   'guifg':'Black',   'guibg':'#af5faf' },
+		\   { 'ctermfg':'Black',      'ctermbg':'138',   'guifg':'Black',   'guibg':'#af8787' },
+		\   { 'ctermfg':'Black',      'ctermbg':'142',   'guifg':'Black',   'guibg':'#afaf00' },
+		\   { 'ctermfg':'Black',      'ctermbg':'152',   'guifg':'Black',   'guibg':'#afd7d7' },
+		\   { 'ctermfg':'White',      'ctermbg':'160',   'guifg':'White',   'guibg':'#d70000' },
+		\   { 'ctermfg':'Black',      'ctermbg':'166',   'guifg':'Black',   'guibg':'#d75f00' },
+		\   { 'ctermfg':'Black',      'ctermbg':'169',   'guifg':'Black',   'guibg':'#d75faf' },
+		\   { 'ctermfg':'Black',      'ctermbg':'174',   'guifg':'Black',   'guibg':'#d78787' },
+		\   { 'ctermfg':'Black',      'ctermbg':'175',   'guifg':'Black',   'guibg':'#d787af' },
+		\   { 'ctermfg':'Black',      'ctermbg':'186',   'guifg':'Black',   'guibg':'#d7d787' },
+		\   { 'ctermfg':'Black',      'ctermbg':'190',   'guifg':'Black',   'guibg':'#d7ff00' },
+		\   { 'ctermfg':'White',      'ctermbg':'198',   'guifg':'White',   'guibg':'#ff0087' },
+		\   { 'ctermfg':'Black',      'ctermbg':'202',   'guifg':'Black',   'guibg':'#ff5f00' },
+		\   { 'ctermfg':'Black',      'ctermbg':'204',   'guifg':'Black',   'guibg':'#ff5f87' },
+		\   { 'ctermfg':'Black',      'ctermbg':'209',   'guifg':'Black',   'guibg':'#ff875f' },
+		\   { 'ctermfg':'Black',      'ctermbg':'212',   'guifg':'Black',   'guibg':'#ff87d7' },
+		\   { 'ctermfg':'Black',      'ctermbg':'215',   'guifg':'Black',   'guibg':'#ffaf5f' },
+		\   { 'ctermfg':'Black',      'ctermbg':'220',   'guifg':'Black',   'guibg':'#ffd700' },
+		\   { 'ctermfg':'Black',      'ctermbg':'224',   'guifg':'Black',   'guibg':'#ffd7d7' },
+		\   { 'ctermfg':'Black',      'ctermbg':'228',   'guifg':'Black',   'guibg':'#ffff87' },
+		\]
+		endif
+		if has('gui_running')
+		let l:palette += [
+		\   {                                            'guifg':'Black',   'guibg':'#b3dcff' },
+		\   {                                            'guifg':'Black',   'guibg':'#99cbd6' },
+		\   {                                            'guifg':'Black',   'guibg':'#7afff0' },
+		\   {                                            'guifg':'Black',   'guibg':'#a6ffd2' },
+		\   {                                            'guifg':'Black',   'guibg':'#a2de9e' },
+		\   {                                            'guifg':'Black',   'guibg':'#bcff80' },
+		\   {                                            'guifg':'Black',   'guibg':'#e7ff8c' },
+		\   {                                            'guifg':'Black',   'guibg':'#f2e19d' },
+		\   {                                            'guifg':'Black',   'guibg':'#ffcc73' },
+		\   {                                            'guifg':'Black',   'guibg':'#f7af83' },
+		\   {                                            'guifg':'Black',   'guibg':'#fcb9b1' },
+		\   {                                            'guifg':'Black',   'guibg':'#ff8092' },
+		\   {                                            'guifg':'Black',   'guibg':'#ff73bb' },
+		\   {                                            'guifg':'Black',   'guibg':'#fc97ef' },
+		\   {                                            'guifg':'Black',   'guibg':'#c8a3d9' },
+		\   {                                            'guifg':'Black',   'guibg':'#ac98eb' },
+		\   {                                            'guifg':'Black',   'guibg':'#6a6feb' },
+		\   {                                            'guifg':'Black',   'guibg':'#8caeff' },
+		\   {                                            'guifg':'Black',   'guibg':'#70b9fa' },
+		\]
+		endif
+	return l:palette
+endfunction
+
+" vim: ts=4 sts=0 sw=4 noet
 plugin/mark.vim	[[[1
-364
+420
 " Script Name: mark.vim
 " Description: Highlight several words in different colors simultaneously.
 "
@@ -974,10 +1195,31 @@ plugin/mark.vim	[[[1
 "
 " Dependencies:
 "  - Requires Vim 7.1 with "matchadd()", or Vim 7.2 or higher.
-"  - mark.vim autoload script.
+"  - mark.vim autoload script
+"  - mark/palettes.vim autoload script for additional palettes
 "
-" Version:     2.6.3
+" Version:     2.7.1
 " Changes:
+" 13-Sep-2012, Ingo Karkat
+" - Enable alternative * / # mappings that do not remember the last search type
+"   through new <Plug>MarkSearchOrCurNext, <Plug>MarkSearchOrCurPrev,
+"   <Plug>MarkSearchOrAnyNext, <Plug>MarkSearchOrAnyPrev mappings.
+"
+" 04-Jul-2012, Ingo Karkat
+" - Introduce g:mwPalettes instead of hard-coding them in
+"   s:DefaultHighlightings(), which got s:DefineHighlightings() extracted and
+"   the rest renamed to s:GetPalette().
+" - Allow overriding of existing mark highlighting via a:isOverride argument to
+"   s:DefineHighlightings().
+" - Add "maximum" palette contributed by rockybalboa4 and move it and the
+"   "extended" palette to a separate mark/palettes.vim autoload script.
+" - ENH: Implement :MarkPalette command to switch mark highlighting on-the-fly
+"   during runtime.
+"
+" 24-Jun-2012, Ingo Karkat
+" - Don't define the default <Leader>m and <Leader>r mappings in select mode,
+"   just visual mode. Thanks to rockybalboa4 for pointing this out.
+"
 " 27-Mar-2012, Ingo Karkat
 " - ENH: Allow choosing of palette and limiting of default mark highlight groups
 "   via g:mwDefaultHighlightingPalette and g:mwDefaultHighlightingNum.
@@ -1146,6 +1388,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 "- configuration --------------------------------------------------------------
+
 if ! exists('g:mwHistAdd')
 	let g:mwHistAdd = '/@'
 endif
@@ -1164,60 +1407,64 @@ endif
 if ! exists('g:mwDefaultHighlightingPalette')
 	let g:mwDefaultHighlightingPalette = 'original'
 endif
-
-
-"- default highlightings ------------------------------------------------------
-function! s:DefaultHighlightings()
-	let l:palette = []
-	if type(g:mwDefaultHighlightingPalette) == type([])
-		" There are custom color definitions, not a named built-in palette.
-		let l:palette = g:mwDefaultHighlightingPalette
-	elseif g:mwDefaultHighlightingPalette ==# 'original'
-		let l:palette = [
+if ! exists('g:mwPalettes')
+	let g:mwPalettes = {
+	\	'original': [
 		\   { 'ctermbg':'Cyan',       'ctermfg':'Black', 'guibg':'#8CCBEA', 'guifg':'Black' },
 		\   { 'ctermbg':'Green',      'ctermfg':'Black', 'guibg':'#A4E57E', 'guifg':'Black' },
 		\   { 'ctermbg':'Yellow',     'ctermfg':'Black', 'guibg':'#FFDB72', 'guifg':'Black' },
 		\   { 'ctermbg':'Red',        'ctermfg':'Black', 'guibg':'#FF7272', 'guifg':'Black' },
 		\   { 'ctermbg':'Magenta',    'ctermfg':'Black', 'guibg':'#FFB3FF', 'guifg':'Black' },
 		\   { 'ctermbg':'Blue',       'ctermfg':'Black', 'guibg':'#9999FF', 'guifg':'Black' },
-		\]
-	elseif g:mwDefaultHighlightingPalette ==# 'extended'
-		let l:palette = [
-		\   { 'ctermbg':'Blue',       'ctermfg':'Black', 'guibg':'#A1B7FF', 'guifg':'#001E80' },
-		\   { 'ctermbg':'Magenta',    'ctermfg':'Black', 'guibg':'#FFA1C6', 'guifg':'#80005D' },
-		\   { 'ctermbg':'Green',      'ctermfg':'Black', 'guibg':'#ACFFA1', 'guifg':'#0F8000' },
-		\   { 'ctermbg':'Yellow',     'ctermfg':'Black', 'guibg':'#FFE8A1', 'guifg':'#806000' },
-		\   { 'ctermbg':'DarkCyan',   'ctermfg':'Black', 'guibg':'#D2A1FF', 'guifg':'#420080' },
-		\   { 'ctermbg':'Cyan',       'ctermfg':'Black', 'guibg':'#A1FEFF', 'guifg':'#007F80' },
-		\   { 'ctermbg':'DarkBlue',   'ctermfg':'Black', 'guibg':'#A1DBFF', 'guifg':'#004E80' },
-		\   { 'ctermbg':'DarkMagenta','ctermfg':'Black', 'guibg':'#A29CCF', 'guifg':'#120080' },
-		\   { 'ctermbg':'DarkRed',    'ctermfg':'Black', 'guibg':'#F5A1FF', 'guifg':'#720080' },
-		\   { 'ctermbg':'Brown',      'ctermfg':'Black', 'guibg':'#FFC4A1', 'guifg':'#803000' },
-		\   { 'ctermbg':'DarkGreen',  'ctermfg':'Black', 'guibg':'#D0FFA1', 'guifg':'#3F8000' },
-		\   { 'ctermbg':'Red',        'ctermfg':'Black', 'guibg':'#F3FFA1', 'guifg':'#6F8000' },
-		\   { 'ctermbg':'White',      'ctermfg':'Gray',  'guibg':'#E3E3D2', 'guifg':'#999999' },
-		\   { 'ctermbg':'LightGray',  'ctermfg':'White', 'guibg':'#D3D3C3', 'guifg':'#666666' },
-		\   { 'ctermbg':'Gray',       'ctermfg':'Black', 'guibg':'#A3A396', 'guifg':'#222222' },
-		\   { 'ctermbg':'Black',      'ctermfg':'White', 'guibg':'#53534C', 'guifg':'#DDDDDD' },
-		\   { 'ctermbg':'Black',      'ctermfg':'Gray',  'guibg':'#131311', 'guifg':'#AAAAAA' },
-		\   { 'ctermbg':'Blue',       'ctermfg':'White', 'guibg':'#0000FF', 'guifg':'#F0F0FF' },
-		\   { 'ctermbg':'DarkRed',    'ctermfg':'White', 'guibg':'#FF0000', 'guifg':'#FFFFFF' },
-		\]
-	elseif ! empty(g:mwDefaultHighlightingPalette)
-		let v:warningmsg = 'Mark: Unknown value for g:mwDefaultHighlightingPalette: ' . g:mwDefaultHighlightingPalette
-		echohl WarningMsg
-		echomsg v:warningmsg
-		echohl None
+		\],
+	\	'extended': function('mark#palettes#Extended'),
+	\	'maximum': function('mark#palettes#Maximum')
+	\}
+endif
 
-		return
+
+
+"- default highlightings ------------------------------------------------------
+
+function! s:GetPalette()
+	let l:palette = []
+	if type(g:mwDefaultHighlightingPalette) == type([])
+		" There are custom color definitions, not a named built-in palette.
+		return g:mwDefaultHighlightingPalette
+	endif
+	if ! has_key(g:mwPalettes, g:mwDefaultHighlightingPalette)
+		if ! empty(g:mwDefaultHighlightingPalette)
+			let v:warningmsg = 'Mark: Unknown value for g:mwDefaultHighlightingPalette: ' . g:mwDefaultHighlightingPalette
+			echohl WarningMsg
+			echomsg v:warningmsg
+			echohl None
+		endif
+
+		return []
 	endif
 
-	for i in range(1, (g:mwDefaultHighlightingNum == -1 ? len(l:palette) : g:mwDefaultHighlightingNum))
-		execute 'highlight def MarkWord' . i join(map(items(l:palette[i - 1]), 'join(v:val, "=")'))
-	endfor
+	if type(g:mwPalettes[g:mwDefaultHighlightingPalette]) == type([])
+		return g:mwPalettes[g:mwDefaultHighlightingPalette]
+	elseif type(g:mwPalettes[g:mwDefaultHighlightingPalette]) == type(function('tr'))
+		return call(g:mwPalettes[g:mwDefaultHighlightingPalette], [])
+	else
+		let v:errmsg = printf('Mark: Invalid value type for g:mwPalettes[%s]', g:mwDefaultHighlightingPalette)
+		echohl ErrorMsg
+		echomsg v:errmsg
+		echohl None
+		return []
+	endif
 endfunction
-call s:DefaultHighlightings()
-autocmd ColorScheme * call <SID>DefaultHighlightings()
+function! s:DefineHighlightings( palette, isOverride )
+	let l:command = (a:isOverride ? 'highlight' : 'highlight def')
+	let l:highlightingNum = (g:mwDefaultHighlightingNum == -1 ? len(a:palette) : g:mwDefaultHighlightingNum)
+	for i in range(1, l:highlightingNum)
+		execute l:command 'MarkWord' . i join(map(items(a:palette[i - 1]), 'join(v:val, "=")'))
+	endfor
+	return l:highlightingNum
+endfunction
+call s:DefineHighlightings(s:GetPalette(), 0)
+autocmd ColorScheme * call <SID>DefineHighlightings(<SID>GetPalette(), 0)
 
 " Default highlighting for the special search type.
 " You can override this by defining / linking the 'SearchSpecialSearchType'
@@ -1225,7 +1472,9 @@ autocmd ColorScheme * call <SID>DefaultHighlightings()
 highlight def link SearchSpecialSearchType MoreMsg
 
 
+
 "- mappings -------------------------------------------------------------------
+
 nnoremap <silent> <Plug>MarkSet      :<C-u>if !mark#MarkCurrentWord(v:count)<Bar>execute "normal! \<lt>C-\>\<lt>C-n>\<lt>Esc>"<Bar>endif<CR>
 vnoremap <silent> <Plug>MarkSet      :<C-u>if !mark#DoMark(v:count, mark#GetVisualSelectionAsLiteralPattern())<Bar>execute "normal! \<lt>C-\>\<lt>C-n>\<lt>Esc>"<Bar>endif<CR>
 nnoremap <silent> <Plug>MarkRegex    :<C-u>call mark#MarkRegex('')<CR>
@@ -1238,60 +1487,88 @@ nnoremap <silent> <Plug>MarkSearchCurrentNext :<C-u>call mark#SearchCurrentMark(
 nnoremap <silent> <Plug>MarkSearchCurrentPrev :<C-u>call mark#SearchCurrentMark(1)<CR>
 nnoremap <silent> <Plug>MarkSearchAnyNext     :<C-u>call mark#SearchAnyMark(0)<CR>
 nnoremap <silent> <Plug>MarkSearchAnyPrev     :<C-u>call mark#SearchAnyMark(1)<CR>
-nnoremap <silent> <Plug>MarkSearchNext        :<C-u>if !mark#SearchNext(0)<Bar>execute 'normal! *zv'<Bar>endif<CR>
-nnoremap <silent> <Plug>MarkSearchPrev        :<C-u>if !mark#SearchNext(1)<Bar>execute 'normal! #zv'<Bar>endif<CR>
 " When typed, [*#nN] open the fold at the search result, but inside a mapping or
 " :normal this must be done explicitly via 'zv'.
+nnoremap <silent> <Plug>MarkSearchNext        :<C-u>if !mark#SearchNext(0)<Bar>execute 'normal! *zv'<Bar>endif<CR>
+nnoremap <silent> <Plug>MarkSearchPrev        :<C-u>if !mark#SearchNext(1)<Bar>execute 'normal! #zv'<Bar>endif<CR>
+nnoremap <silent> <Plug>MarkSearchOrCurNext   :<C-u>if !mark#SearchNext(0,'mark#SearchCurrentMark')<Bar>execute 'normal! *zv'<Bar>endif<CR>
+nnoremap <silent> <Plug>MarkSearchOrCurPrev   :<C-u>if !mark#SearchNext(1,'mark#SearchCurrentMark')<Bar>execute 'normal! #zv'<Bar>endif<CR>
+nnoremap <silent> <Plug>MarkSearchOrAnyNext   :<C-u>if !mark#SearchNext(0,'mark#SearchAnyMark')<Bar>execute 'normal! *zv'<Bar>endif<CR>
+nnoremap <silent> <Plug>MarkSearchOrAnyPrev   :<C-u>if !mark#SearchNext(1,'mark#SearchAnyMark')<Bar>execute 'normal! #zv'<Bar>endif<CR>
 
 
 if !hasmapto('<Plug>MarkSet', 'n')
-	nmap <unique> <silent> <Leader>m <Plug>MarkSet
+	nmap <unique> <Leader>m <Plug>MarkSet
 endif
 if !hasmapto('<Plug>MarkSet', 'v')
-	vmap <unique> <silent> <Leader>m <Plug>MarkSet
+	xmap <unique> <Leader>m <Plug>MarkSet
 endif
 if !hasmapto('<Plug>MarkRegex', 'n')
-	nmap <unique> <silent> <Leader>r <Plug>MarkRegex
+	nmap <unique> <Leader>r <Plug>MarkRegex
 endif
 if !hasmapto('<Plug>MarkRegex', 'v')
-	vmap <unique> <silent> <Leader>r <Plug>MarkRegex
+	xmap <unique> <Leader>r <Plug>MarkRegex
 endif
 if !hasmapto('<Plug>MarkClear', 'n')
-	nmap <unique> <silent> <Leader>n <Plug>MarkClear
+	nmap <unique> <Leader>n <Plug>MarkClear
 endif
 " No default mapping for <Plug>MarkAllClear.
 " No default mapping for <Plug>MarkToggle.
 
 if !hasmapto('<Plug>MarkSearchCurrentNext', 'n')
-	nmap <unique> <silent> <Leader>* <Plug>MarkSearchCurrentNext
+	nmap <unique> <Leader>* <Plug>MarkSearchCurrentNext
 endif
 if !hasmapto('<Plug>MarkSearchCurrentPrev', 'n')
-	nmap <unique> <silent> <Leader># <Plug>MarkSearchCurrentPrev
+	nmap <unique> <Leader># <Plug>MarkSearchCurrentPrev
 endif
 if !hasmapto('<Plug>MarkSearchAnyNext', 'n')
-	nmap <unique> <silent> <Leader>/ <Plug>MarkSearchAnyNext
+	nmap <unique> <Leader>/ <Plug>MarkSearchAnyNext
 endif
 if !hasmapto('<Plug>MarkSearchAnyPrev', 'n')
-	nmap <unique> <silent> <Leader>? <Plug>MarkSearchAnyPrev
+	nmap <unique> <Leader>? <Plug>MarkSearchAnyPrev
 endif
 if !hasmapto('<Plug>MarkSearchNext', 'n')
-	nmap <unique> <silent> * <Plug>MarkSearchNext
+	nmap <unique> * <Plug>MarkSearchNext
 endif
 if !hasmapto('<Plug>MarkSearchPrev', 'n')
-	nmap <unique> <silent> # <Plug>MarkSearchPrev
+	nmap <unique> # <Plug>MarkSearchPrev
 endif
+
 
 
 "- commands -------------------------------------------------------------------
+
 command! -count -nargs=? Mark if !mark#DoMark(<count>, <f-args>) | echoerr printf('Only %d mark highlight groups', mark#GetGroupNum()) | endif
 command! -bar MarkClear call mark#ClearAll()
 command! -bar Marks call mark#List()
 
 command! -bar MarkLoad call mark#LoadCommand(1)
 command! -bar MarkSave call mark#SaveCommand()
+function! s:SetPalette( paletteName )
+	if type(g:mwDefaultHighlightingPalette) == type([])
+		" Convert the directly defined list to a palette named "default".
+		let g:mwPalettes['default'] = g:mwDefaultHighlightingPalette
+		unlet! g:mwDefaultHighlightingPalette   " Avoid E706.
+	endif
+	let g:mwDefaultHighlightingPalette = a:paletteName
+
+	let l:palette = s:GetPalette()
+	if empty(l:palette)
+		return
+	endif
+
+	call mark#ReInit(s:DefineHighlightings(l:palette, 1))
+	call mark#UpdateScope()
+endfunction
+function! s:MarkPaletteComplete( ArgLead, CmdLine, CursorPos )
+	return sort(filter(keys(g:mwPalettes), 'v:val =~ ''\V\^'' . escape(a:ArgLead, "\\")'))
+endfunction
+command! -bar -nargs=1 -complete=customlist,<SID>MarkPaletteComplete MarkPalette call <SID>SetPalette(<q-args>)
+
 
 
 "- marks persistence ----------------------------------------------------------
+
 if g:mwAutoLoadMarks
 	" As the viminfo is only processed after sourcing of the runtime files, the
 	" persistent global variables are not yet available here. Defer this until Vim
@@ -1326,7 +1603,7 @@ let &cpo = s:save_cpo
 unlet s:save_cpo
 " vim: ts=4 sts=0 sw=4 noet
 doc/mark.txt	[[[1
-514
+591
 *mark.txt*              Highlight several words in different colors simultaneously.
 
 			    MARK    by Ingo Karkat
@@ -1336,6 +1613,7 @@ description			|mark-description|
 usage				|mark-usage|
 installation			|mark-installation|
 configuration			|mark-configuration|
+integration			|mark-integration|
 limitations			|mark-limitations|
 known problems			|mark-known-problems|
 todo				|mark-todo|
@@ -1350,10 +1628,9 @@ highlighting of search results and the * |star| command. For example, when you
 are browsing a big program file, you could highlight multiple identifiers in
 parallel. This will make it easier to trace the source code.
 
-This is a continuation of vimscript #1238 by Yuheng Xie, who apparently
-doesn't maintain his original version anymore and cannot be reached via the
-email address in his profile. This plugin offers the following advantages over
-the original:
+This is a continuation of vimscript #1238 by Yuheng Xie, who doesn't maintain
+his original version anymore and recommends switching to this fork. This
+plugin offers the following advantages over the original:
 - Much faster, all colored words can now be highlighted, no more clashes with
   syntax highlighting (due to use of matchadd()).
 - Many bug fixes.
@@ -1527,20 +1804,35 @@ highlight group via [N].
 			The last mark used for a search (via |<Leader>*|) is
 			shown with a "/".
 
+MARK HIGHLIGHTING PALETTES					*mark-palette*
+
+The plugin comes with three predefined palettes: original, extended, and
+maximum. You can dynamically toggle between them, e.g. when you need more
+marks or a different set of colors.
+								*:MarkPalette*
+:MarkPalette {palette}	Highlight existing and future marks with the colors
+			defined in {palette}. If the new palette contains less
+			mark groups than the current one, the additional marks
+			are lost.
+			You can use |:command-completion| for {palette}.
+
+See |g:mwDefaultHighlightingPalette| for how to change the default palette,
+and |mark-palette-define| for how to add your own custom palettes.
+
 ==============================================================================
 INSTALLATION						   *mark-installation*
 
-This script is packaged as a|vimball|. If you have the "gunzip" decompressor
-in your PATH, simply edit the *.vba.gz package in Vim; otherwise, decompress
+This script is packaged as a |vimball|. If you have the "gunzip" decompressor
+in your PATH, simply edit the *.vmb.gz package in Vim; otherwise, decompress
 the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
 vimball or via the |:UseVimball| command. >
-    vim mark.vba.gz
+    vim mark*.vmb.gz
     :so %
 To uninstall, use the |:RmVimball| command.
 
 DEPENDENCIES						   *mark-dependencies*
 
-- Requires Vim 7.1 with "matchadd()", or Vim 7.2 or higher.
+- Requires Vim 7.1 with |matchadd()|, or Vim 7.2 or higher.
 
 ==============================================================================
 CONFIGURATION						  *mark-configuration*
@@ -1556,6 +1848,9 @@ Higher numbers always take precedence and are displayed above lower ones.
 Especially if you use GVIM, you can switch to a richer palette of up to 18
 colors: >
     let g:mwDefaultHighlightingPalette = 'extended'
+Or, if you have both good eyes and display, you can try a palette that defines
+27, 58, or even 77 colors, depending on the number of available colors: >
+    let g:mwDefaultHighlightingPalette = 'maximum'
 <
 If you like the additional colors, but don't need that many of them, restrict
 their number via: >
@@ -1575,7 +1870,19 @@ use the plugin's infrastructure: >
     \	{ 'ctermbg':'Cyan', 'ctermfg':'Black', 'guibg':'#8CCBEA', 'guifg':'Black' },
     \	...
     \]
-<
+<							 *mark-palette-define*
+If you want to switch multiple palettes during runtime, you need to define
+them as proper palettes: >
+    let g:mwPalettes['mypalette'] = [
+    \	{ 'ctermbg':'Cyan', 'ctermfg':'Black', 'guibg':'#8CCBEA', 'guifg':'Black' },
+    \	...
+    \]
+    let g:mwPalettes['other'] = [ ... ]
+    let g:mwDefaultHighlightingPalette = 'mypalette'
+To add your palette to the existing ones, do this after the default palette
+has been defined, e.g. in .vim/after/plugin/mark.vim). Alternatively, you can
+also completely redefine all available palettes in .vimrc.
+
 The search type highlighting (in the search message) can be changed via: >
     highlight link SearchSpecialSearchType MoreMsg
 <
@@ -1592,6 +1899,12 @@ To turn off the automatic persistence of marks across Vim sessions: >
     let g:mwAutoSaveMarks = 0
 You can still explicitly save marks via |:MarkSave|.
 
+							      *g:mwIgnoreCase*
+If you have set 'ignorecase', but want marks to be case-insensitive, you can
+override the default behavior of using 'ignorecase' by setting: >
+	let g:mwIgnoreCase = 0
+<
+
 							       *mark-mappings*
 You can use different mappings by mapping to the <Plug>Mark... mappings (use
 ":map <Plug>Mark" to list them all) before this plugin is sourced.
@@ -1605,6 +1918,12 @@ To remove the default overriding of * and #, use: >
     nmap <Plug>IgnoreMarkSearchNext <Plug>MarkSearchNext
     nmap <Plug>IgnoreMarkSearchPrev <Plug>MarkSearchPrev
 <
+If you don't want the * and # mappings remember the last search type and
+instead always search for the next occurrence of the current mark, with a
+fallback to Vim's original * command, use: >
+    nmap * <Plug>MarkSearchOrCurNext
+    nmap # <Plug>MarkSearchOrCurPrev
+<
 						 *mark-whitespace-indifferent*
 Some people like to create a mark based on the visual selection, like
 |v_<Leader>m|, but have whitespace in the selection match any whitespace when
@@ -1616,7 +1935,7 @@ You can achieve the same with the Mark plugin through the following scriptlet: >
     function! s:GetVisualSelectionAsLiteralWhitespaceIndifferentPattern()
     	return substitute(escape(mark#GetVisualSelection(), '\' . '^$.*[~'), '\_s\+', '\\_s\\+', 'g')
     endfunction
-    vnoremap <silent> <Plug>MarkWhitespaceIndifferent <C-\><C-n>:call mark#DoMark(<SID>GetVisualSelectionAsLiteralWhitespaceIndifferentPattern())<CR>
+    vnoremap <silent> <Plug>MarkWhitespaceIndifferent :<C-u>if !mark#DoMark(v:count, <SID>GetVisualSelectionAsLiteralWhitespaceIndifferentPattern())<Bar>execute "normal! \<lt>C-\>\<lt>C-n>\<lt>Esc>"<Bar>endif<CR>
 Using this, you can assign a new visual mode mapping <Leader>* >
     vmap <Leader>* <Plug>MarkWhitespaceIndifferent
 or override the default |v_<Leader>m| mapping, in case you always want this
@@ -1624,6 +1943,14 @@ behavior: >
     vmap <Plug>IgnoreMarkSet <Plug>MarkSet
     vmap <Leader>m <Plug>MarkWhitespaceIndifferent
 <
+==============================================================================
+INTEGRATION						    *mark-integration*
+
+The following functions offer (read-only) access to the number of marks and
+individual patterns:
+- mark#GetNum()
+- mark#GetPattern([{index}])
+
 ==============================================================================
 LIMITATIONS						    *mark-limitations*
 
@@ -1647,6 +1974,31 @@ http://vim.wikia.com/wiki/Highlight_multiple_words:
 ==============================================================================
 HISTORY								*mark-history*
 
+2.7.2	15-Oct-2012
+- Issue an error message "No marks defined" instead of moving the cursor by
+  one character when there are no marks (e.g. initially or after :MarkClear).
+- Enable custom integrations via new mark#GetNum() and mark#GetPattern()
+  functions.
+
+2.7.1	14-Sep-2012
+- Enable alternative * / # mappings that do not remember the last search type
+  through new <Plug>MarkSearchOrCurNext, <Plug>MarkSearchOrCurPrev,
+  <Plug>MarkSearchOrAnyNext, <Plug>MarkSearchOrAnyPrev mappings. Based on an
+  inquiry from Kevin Huanpeng Du.
+
+2.7.0	04-Jul-2012
+- ENH: Implement :MarkPalette command to switch mark highlighting on-the-fly
+  during runtime.
+- Add "maximum" palette contributed by rockybalboa4.
+
+2.6.5	24-Jun-2012
+- Don't define the default <Leader>m and <Leader>r mappings in select mode,
+  just visual mode. Thanks to rockybalboa4 for pointing this out.
+
+2.6.4	23-Apr-2012
+- Allow to override 'ignorecase' setting via g:mwIgnoreCase. Thanks to fanhe
+  for the idea and sending a patch.
+
 2.6.3	27-Mar-2012
 - ENH: Allow choosing of palette and limiting of default mark highlight groups
   via g:mwDefaultHighlightingPalette and g:mwDefaultHighlightingNum.
@@ -1658,6 +2010,8 @@ HISTORY								*mark-history*
 - ENH: When a [count] exceeding the number of available mark groups is given,
   a summary of marks is given and the user is asked to select a mark group.
   This allows to interactively choose a color via 99<Leader>m.
+  If you use the |mark-whitespace-indifferent| mappings, *** PLEASE UPDATE THE
+  vnoremap <Plug>MarkWhitespaceIndifferent DEFINITION ***
 - ENH: Include count of alternative patterns in :Marks list.
 - CHG: Use ">" for next mark and "/" for last search in :Marks.
 
@@ -1836,7 +2190,7 @@ Initial version published by Yuheng Xie on vim.org.
 ==============================================================================
 Copyright: (C) 2005-2008 Yuheng Xie
            (C) 2008-2012 Ingo Karkat
-The VIM LICENSE applies to this script; see|copyright|.
+The VIM LICENSE applies to this script; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
 ==============================================================================

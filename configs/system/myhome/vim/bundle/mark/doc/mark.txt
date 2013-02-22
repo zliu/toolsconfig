@@ -7,6 +7,7 @@ description			|mark-description|
 usage				|mark-usage|
 installation			|mark-installation|
 configuration			|mark-configuration|
+integration			|mark-integration|
 limitations			|mark-limitations|
 known problems			|mark-known-problems|
 todo				|mark-todo|
@@ -21,10 +22,9 @@ highlighting of search results and the * |star| command. For example, when you
 are browsing a big program file, you could highlight multiple identifiers in
 parallel. This will make it easier to trace the source code.
 
-This is a continuation of vimscript #1238 by Yuheng Xie, who apparently
-doesn't maintain his original version anymore and cannot be reached via the
-email address in his profile. This plugin offers the following advantages over
-the original:
+This is a continuation of vimscript #1238 by Yuheng Xie, who doesn't maintain
+his original version anymore and recommends switching to this fork. This
+plugin offers the following advantages over the original:
 - Much faster, all colored words can now be highlighted, no more clashes with
   syntax highlighting (due to use of matchadd()).
 - Many bug fixes.
@@ -198,20 +198,35 @@ highlight group via [N].
 			The last mark used for a search (via |<Leader>*|) is
 			shown with a "/".
 
+MARK HIGHLIGHTING PALETTES					*mark-palette*
+
+The plugin comes with three predefined palettes: original, extended, and
+maximum. You can dynamically toggle between them, e.g. when you need more
+marks or a different set of colors.
+								*:MarkPalette*
+:MarkPalette {palette}	Highlight existing and future marks with the colors
+			defined in {palette}. If the new palette contains less
+			mark groups than the current one, the additional marks
+			are lost.
+			You can use |:command-completion| for {palette}.
+
+See |g:mwDefaultHighlightingPalette| for how to change the default palette,
+and |mark-palette-define| for how to add your own custom palettes.
+
 ==============================================================================
 INSTALLATION						   *mark-installation*
 
-This script is packaged as a|vimball|. If you have the "gunzip" decompressor
-in your PATH, simply edit the *.vba.gz package in Vim; otherwise, decompress
+This script is packaged as a |vimball|. If you have the "gunzip" decompressor
+in your PATH, simply edit the *.vmb.gz package in Vim; otherwise, decompress
 the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
 vimball or via the |:UseVimball| command. >
-    vim mark.vba.gz
+    vim mark*.vmb.gz
     :so %
 To uninstall, use the |:RmVimball| command.
 
 DEPENDENCIES						   *mark-dependencies*
 
-- Requires Vim 7.1 with "matchadd()", or Vim 7.2 or higher.
+- Requires Vim 7.1 with |matchadd()|, or Vim 7.2 or higher.
 
 ==============================================================================
 CONFIGURATION						  *mark-configuration*
@@ -227,6 +242,9 @@ Higher numbers always take precedence and are displayed above lower ones.
 Especially if you use GVIM, you can switch to a richer palette of up to 18
 colors: >
     let g:mwDefaultHighlightingPalette = 'extended'
+Or, if you have both good eyes and display, you can try a palette that defines
+27, 58, or even 77 colors, depending on the number of available colors: >
+    let g:mwDefaultHighlightingPalette = 'maximum'
 <
 If you like the additional colors, but don't need that many of them, restrict
 their number via: >
@@ -246,7 +264,19 @@ use the plugin's infrastructure: >
     \	{ 'ctermbg':'Cyan', 'ctermfg':'Black', 'guibg':'#8CCBEA', 'guifg':'Black' },
     \	...
     \]
-<
+<							 *mark-palette-define*
+If you want to switch multiple palettes during runtime, you need to define
+them as proper palettes: >
+    let g:mwPalettes['mypalette'] = [
+    \	{ 'ctermbg':'Cyan', 'ctermfg':'Black', 'guibg':'#8CCBEA', 'guifg':'Black' },
+    \	...
+    \]
+    let g:mwPalettes['other'] = [ ... ]
+    let g:mwDefaultHighlightingPalette = 'mypalette'
+To add your palette to the existing ones, do this after the default palette
+has been defined, e.g. in .vim/after/plugin/mark.vim). Alternatively, you can
+also completely redefine all available palettes in .vimrc.
+
 The search type highlighting (in the search message) can be changed via: >
     highlight link SearchSpecialSearchType MoreMsg
 <
@@ -263,6 +293,12 @@ To turn off the automatic persistence of marks across Vim sessions: >
     let g:mwAutoSaveMarks = 0
 You can still explicitly save marks via |:MarkSave|.
 
+							      *g:mwIgnoreCase*
+If you have set 'ignorecase', but want marks to be case-insensitive, you can
+override the default behavior of using 'ignorecase' by setting: >
+	let g:mwIgnoreCase = 0
+<
+
 							       *mark-mappings*
 You can use different mappings by mapping to the <Plug>Mark... mappings (use
 ":map <Plug>Mark" to list them all) before this plugin is sourced.
@@ -276,6 +312,12 @@ To remove the default overriding of * and #, use: >
     nmap <Plug>IgnoreMarkSearchNext <Plug>MarkSearchNext
     nmap <Plug>IgnoreMarkSearchPrev <Plug>MarkSearchPrev
 <
+If you don't want the * and # mappings remember the last search type and
+instead always search for the next occurrence of the current mark, with a
+fallback to Vim's original * command, use: >
+    nmap * <Plug>MarkSearchOrCurNext
+    nmap # <Plug>MarkSearchOrCurPrev
+<
 						 *mark-whitespace-indifferent*
 Some people like to create a mark based on the visual selection, like
 |v_<Leader>m|, but have whitespace in the selection match any whitespace when
@@ -287,7 +329,7 @@ You can achieve the same with the Mark plugin through the following scriptlet: >
     function! s:GetVisualSelectionAsLiteralWhitespaceIndifferentPattern()
     	return substitute(escape(mark#GetVisualSelection(), '\' . '^$.*[~'), '\_s\+', '\\_s\\+', 'g')
     endfunction
-    vnoremap <silent> <Plug>MarkWhitespaceIndifferent <C-\><C-n>:call mark#DoMark(<SID>GetVisualSelectionAsLiteralWhitespaceIndifferentPattern())<CR>
+    vnoremap <silent> <Plug>MarkWhitespaceIndifferent :<C-u>if !mark#DoMark(v:count, <SID>GetVisualSelectionAsLiteralWhitespaceIndifferentPattern())<Bar>execute "normal! \<lt>C-\>\<lt>C-n>\<lt>Esc>"<Bar>endif<CR>
 Using this, you can assign a new visual mode mapping <Leader>* >
     vmap <Leader>* <Plug>MarkWhitespaceIndifferent
 or override the default |v_<Leader>m| mapping, in case you always want this
@@ -295,6 +337,14 @@ behavior: >
     vmap <Plug>IgnoreMarkSet <Plug>MarkSet
     vmap <Leader>m <Plug>MarkWhitespaceIndifferent
 <
+==============================================================================
+INTEGRATION						    *mark-integration*
+
+The following functions offer (read-only) access to the number of marks and
+individual patterns:
+- mark#GetNum()
+- mark#GetPattern([{index}])
+
 ==============================================================================
 LIMITATIONS						    *mark-limitations*
 
@@ -318,6 +368,31 @@ http://vim.wikia.com/wiki/Highlight_multiple_words:
 ==============================================================================
 HISTORY								*mark-history*
 
+2.7.2	15-Oct-2012
+- Issue an error message "No marks defined" instead of moving the cursor by
+  one character when there are no marks (e.g. initially or after :MarkClear).
+- Enable custom integrations via new mark#GetNum() and mark#GetPattern()
+  functions.
+
+2.7.1	14-Sep-2012
+- Enable alternative * / # mappings that do not remember the last search type
+  through new <Plug>MarkSearchOrCurNext, <Plug>MarkSearchOrCurPrev,
+  <Plug>MarkSearchOrAnyNext, <Plug>MarkSearchOrAnyPrev mappings. Based on an
+  inquiry from Kevin Huanpeng Du.
+
+2.7.0	04-Jul-2012
+- ENH: Implement :MarkPalette command to switch mark highlighting on-the-fly
+  during runtime.
+- Add "maximum" palette contributed by rockybalboa4.
+
+2.6.5	24-Jun-2012
+- Don't define the default <Leader>m and <Leader>r mappings in select mode,
+  just visual mode. Thanks to rockybalboa4 for pointing this out.
+
+2.6.4	23-Apr-2012
+- Allow to override 'ignorecase' setting via g:mwIgnoreCase. Thanks to fanhe
+  for the idea and sending a patch.
+
 2.6.3	27-Mar-2012
 - ENH: Allow choosing of palette and limiting of default mark highlight groups
   via g:mwDefaultHighlightingPalette and g:mwDefaultHighlightingNum.
@@ -329,6 +404,8 @@ HISTORY								*mark-history*
 - ENH: When a [count] exceeding the number of available mark groups is given,
   a summary of marks is given and the user is asked to select a mark group.
   This allows to interactively choose a color via 99<Leader>m.
+  If you use the |mark-whitespace-indifferent| mappings, *** PLEASE UPDATE THE
+  vnoremap <Plug>MarkWhitespaceIndifferent DEFINITION ***
 - ENH: Include count of alternative patterns in :Marks list.
 - CHG: Use ">" for next mark and "/" for last search in :Marks.
 
@@ -507,7 +584,7 @@ Initial version published by Yuheng Xie on vim.org.
 ==============================================================================
 Copyright: (C) 2005-2008 Yuheng Xie
            (C) 2008-2012 Ingo Karkat
-The VIM LICENSE applies to this script; see|copyright|.
+The VIM LICENSE applies to this script; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
 ==============================================================================
