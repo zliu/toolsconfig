@@ -22,3 +22,42 @@
 [submodule "configs/system/myhome/vim/bundle/vim-multi-cursors"]
 	path = configs/system/myhome/vim/bundle/vim-multi-cursors
 	url = git@github.com:terryma/vim-multiple-cursors.git
+[submodule "configs/system/myhome/vim/bundle/ctrlp"]
+	path = configs/system/myhome/vim/bundle/ctrlp
+	url = git@github.com:kien/ctrlp.vim.git
+[submodule "vim/bundle/ctrlp"]
+	path = vim/bundle/ctrlp
+	url = git@github.com:kien/ctrlp.vim.git
+[submodule "vim/bundle/easymotion"]
+	path = vim/bundle/easymotion
+	url = git@github.com:Lokaltog/vim-easymotion.git
+[submodule "vim/bundle/indent-guides"]
+	path = vim/bundle/indent-guides
+	url = git@github.com:nathanaelkane/vim-indent-guides.git
+[submodule "vim/bundle/nerdcommenter"]
+	path = vim/bundle/nerdcommenter
+	url = git@github.com:scrooloose/nerdcommenter.git
+[submodule "vim/bundle/nerdtree"]
+	path = vim/bundle/nerdtree
+	url = git@github.com:scrooloose/nerdtree.git
+[submodule "vim/bundle/pathogen"]
+	path = vim/bundle/pathogen
+	url = git@github.com:tpope/vim-pathogen.git
+[submodule "vim/bundle/snipmate"]
+	path = vim/bundle/snipmate
+	url = git@github.com:msanders/snipmate.vim.git
+[submodule "vim/bundle/surround"]
+	path = vim/bundle/surround
+	url = git@github.com:tpope/vim-surround.git
+[submodule "vim/bundle/multi-cursors"]
+	path = vim/bundle/multi-cursors
+	url = git@github.com:terryma/vim-multiple-cursors.git
+[submodule "vim/bundle/powerline"]
+	path = vim/bundle/powerline
+	url = git@github.com:Lokaltog/vim-powerline.git
+[submodule "vim/bundle/fugitive"]
+	path = vim/bundle/fugitive
+	url = git@github.com:tpope/vim-fugitive.git
+[submodule "vim/bundle/vimwiki"]
+	path = vim/bundle/vimwiki
+	url = git@github.com:vimwiki/vimwiki.git
