@@ -61,3 +61,9 @@
 [submodule "vim/bundle/vimwiki"]
 	path = vim/bundle/vimwiki
 	url = git@github.com:vimwiki/vimwiki.git
+[submodule "vim/bundle/color-zenburn"]
+	path = vim/bundle/color-zenburn
+	url = git@github.com:jnurmine/Zenburn.git
+[submodule "vim/bundle/color-inkpot"]
+	path = vim/bundle/color-inkpot
+	url = git@github.com:ciaranm/inkpot.git

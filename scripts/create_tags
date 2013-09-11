@@ -1,0 +1,32 @@
+#!/bin/sh
+source_files=$PWD/cscope.files
+
+rm -rf $source_files
+
+find $PWD -name "*.[ch]" |grep -v xmake.build > $source_files
+find $PWD -name "*.cpp"  |grep -v xmake.build >> $source_files
+find $PWD -name "*.hpp"  |grep -v xmake.build >> $source_files
+find $PWD -name "*.lc"   |grep -v xmake.build >> $source_files
+find $PWD -name "*.hc"   |grep -v xmake.build >> $source_files
+find $PWD -name "*.java" |grep -v xmake.build >> $source_files
+find $PWD -name "*.php"  |grep -v xmake.build >> $source_files
+
+if  [ ! -z "$1" ]; then 
+	find $1 -name "*.[ch]" >> $source_files
+	find $1 -name "*.lc"  >> $source_files
+	find $1 -name "*.hc"  >> $source_files
+fi
+
+ctags -R --format=2 --excmd=pattern --c-kinds=+p --c++-kinds=+p --fields=+ianks --fields=+S --sort=yes --extra=+q -L $source_files
+#ctags -R --format=2 --excmd=pattern --fields=nks --fields=+S --sort=yes -L $source_files
+#ctags -R --format=2 --c-kinds=+p --excmd=pattern --fields=nks --fields=+S --sort=yes -L $source_files -f tags
+cscope -b -q -i $source_files
+
+#For large system, it makes vim slow
+#tags=`gawk -F "\t" '{if($4=="t")print $1}' tags|sort -u`
+#echo syntax keyword Type $tags > $source_files/tags.vim
+
+#tags=`gawk -F "\t" '{if($4=="f")print $1}' tags|sort -u`
+#echo syntax keyword Tag $tags >> $source_files/tags.vim
+
+
