@@ -67,3 +67,9 @@
 [submodule "vim/bundle/color-inkpot"]
 	path = vim/bundle/color-inkpot
 	url = git@github.com:ciaranm/inkpot.git
+[submodule "vim/bundle/colorscheme-tla"]
+	path = vim/bundle/colorscheme-tla
+	url = https://github.com/vim-scripts/tla.vim.git
+[submodule "vim/bundle/TLA"]
+	path = vim/bundle/TLA
+	url = https://github.com/vim-scripts/TLA.git
