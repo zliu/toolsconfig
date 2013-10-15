@@ -123,13 +123,13 @@ imap <C-a> <ESC>:wa<CR>a
 nmap <C-a> :wa<CR>
 """"""""""""""""""""""""""""""""""""""""
 "  Tab View
-map  <C-e> :tabprevious<CR>
-map  <C-r> :tabnext<CR>
-map  <C-t> :tabnew<CR>:Explore<cr>
-map  <C-y> :tabclose<CR>
-imap  <C-e> <ESC>:tabprevious<CR>i
-imap  <C-r> <ESC>:tabnext<CR>i
-imap  <C-t> <ESC>:tabnew<CR>:Explore<cr>i
+"map  <C-e> :tabprevious<CR>
+"map  <C-r> :tabnext<CR>
+"map  <C-t> :tabnew<CR>:Explore<cr>
+"map  <C-y> :tabclose<CR>
+"imap  <C-e> <ESC>:tabprevious<CR>i
+"imap  <C-r> <ESC>:tabnext<CR>i
+"imap  <C-t> <ESC>:tabnew<CR>:Explore<cr>i
 
 """"""""""""""""""""""""""""""""""""""""
 """"""""""""""""""""""""""""""""""""""""
