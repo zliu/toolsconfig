@@ -73,3 +73,6 @@
 [submodule "vim/bundle/TLA"]
 	path = vim/bundle/TLA
 	url = https://github.com/vim-scripts/TLA.git
+[submodule "vim/bundle/syntastic"]
+	path = vim/bundle/syntastic
+	url = https://github.com/scrooloose/syntastic.git
