@@ -76,3 +76,6 @@
 [submodule "vim/bundle/syntastic"]
 	path = vim/bundle/syntastic
 	url = git@github.com:scrooloose/syntastic.git
+[submodule "powerline"]
+	path = powerline
+	url = git@github.com:Lokaltog/powerline.git
