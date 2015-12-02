@@ -5,6 +5,7 @@
 	tool = vimdiff
 [core]
 	editor = vim
+	excludedfiles = .svn
 [alias]
 	co = checkout
 	br = branch
@@ -25,3 +26,5 @@
 [http]
 	proxy = localhost:8087
 	sslVerify = false
+[push]
+	default = simple
