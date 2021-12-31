@@ -78,7 +78,19 @@
 	url = git@github.com:scrooloose/syntastic.git
 [submodule "powerline"]
 	path = powerline
-	url = git@github.com:Lokaltog/powerline.git
+	url = git@github.com:powerline/powerline.git
 [submodule "powerline-fonts"]
 	path = powerline-fonts
 	url = git@github.com:Lokaltog/powerline-fonts.git
+[submodule "taglist"]
+	path = vim/bundle/taglist
+	url = git@github.com:yegappan/taglist.git
+[submodule "mark"]
+	path = vim/bundle/vim-mark
+	url = git@github.com:inkarkat/vim-mark.git
+[submodule "grep"]
+	path = vim/bundle/grep
+	url = git@github.com:yegappan/grep.git
+[submodule "mru"]
+	path = vim/bundle/mru
+	url = git@github.com:yegappan/mru.git
